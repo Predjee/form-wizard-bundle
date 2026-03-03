@@ -1,0 +1,149 @@
+yiggle_form_wizard:
+  forms: "Form Wizards"
+
+  tabs:
+    steps: "Wizard Steps"
+    email: "Email Settings"
+
+  choices:
+    none: "None"
+    afterward: "Afterwards"
+    required: "Required"
+    to: "To"
+    cc: "CC"
+    bcc: "BCC"
+
+  export:
+    button_label: "Export"
+    preparing: "Export is being prepared, the download will start once it's ready."
+    success: "Export is finished and is being downloaded."
+    error: "Something went wrong during export. Please try again."
+    error_no_id: "No record selected for export."
+
+  admin:
+    title: "Title"
+    enabled: "Enabled"
+    display_settings: "Display settings"
+    show_summary: "Show summary"
+    show_summary_final_step: "Show a summary on the final step"
+    show_receipt: "Show receipt"
+    submit_label: "Submit button text"
+    payment_mode: "Payment mode"
+    fixed_amount: "Fixed amount"
+    success_title: "Success title"
+    success_text: "Success message"
+    success_link: "Success link"
+    website_configuration: "Website configuration"
+    render_variant: "Render variant"
+
+    steps: "Steps"
+    step: "Step"
+    step_title: "Step title"
+    step_instruction: "Step instruction"
+    fields: "Fields"
+
+    email:
+      subject: "Email subject"
+      from_email: "Sender email address"
+      from_name: "Sender name"
+      customer_email_field: "Customer email field"
+      disable_admin: "Disable admin emails"
+      disable_customer: "Disable customer emails"
+      include_copy: "Include form copy"
+      receivers: "Receivers"
+      receiver_type: "Receiver type"
+      receiver_email: "Receiver email address"
+      receiver_name: "Receiver name"
+      admin_email_text: "Admin email intro"
+      customer_email_text: "Customer email intro"
+
+    choices:
+      none: "None"
+      required: "Required"
+      to: "To"
+      cc: "CC"
+      bcc: "BCC"
+
+    field:
+      width: "Width"
+      name: "Name (key)"
+      label: "Label"
+      required: "Required"
+      include_in_admin_mail: "Include in admin email"
+      include_in_customer_mail: "Include in confirmation email"
+
+      receipt:
+        label: "Receipt label"
+        radio:
+          yes_label: "Receipt label (Yes)"
+          no_label: "Receipt label (No)"
+
+      type:
+        text: "Text field"
+        textarea: "Text field (multiple lines)"
+        email: "Email address"
+        tel: "Phone number"
+        date: "Date"
+        integer: "Number (integer)"
+        number: "Number (decimal)"
+        checkbox: "Checkbox"
+        checkbox_with_price: "Checkbox (with price)"
+        choice_with_price: "Choice field (with price)"
+        radio_with_price: "Radio (with price)"
+        wizard_repeatable_group: "Repeatable group"
+
+      text:
+        placeholder: "Placeholder"
+        help: "Help text"
+
+      textarea:
+        placeholder: "Placeholder"
+        help: "Help text"
+        rows: "Number of rows"
+
+      email:
+        placeholder: "Placeholder"
+        help: "Help text"
+
+      tel:
+        placeholder: "Placeholder"
+        help: "Help text"
+
+      date:
+        min: "Min. date (YYYY-MM-DD)"
+        max: "Max. date (YYYY-MM-DD)"
+
+      integer:
+        min: "Minimum"
+        max: "Maximum"
+
+      number:
+        min: "Minimum"
+        max: "Maximum"
+        step: "Step size (e.g. 0.01)"
+
+      checkbox:
+        default_checked: "Checked by default"
+
+      checkbox_with_price:
+        default_checked: "Checked by default"
+        price: "Price"
+
+      choice:
+        presentation: "Presentation"
+        multiple: "Multiple choices possible"
+        options_with_price: "Options with price"
+        option: "Option"
+        price: "Price"
+
+      radio_with_price:
+        yes_label: "Label 'Yes'"
+        no_label: "Label 'No'"
+        price_cents: "Price when 'Yes'"
+
+      repeatable_group:
+        min_rows: "Minimum number of rows"
+        max_rows: "Maximum number of rows"
+        add_label: "Label 'Add' button"
+        remove_label: "Label 'Remove' button"
+        row_fields: "Fields per row"

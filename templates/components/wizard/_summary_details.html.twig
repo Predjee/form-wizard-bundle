@@ -1,0 +1,49 @@
+{% set lines = receipt.lines|default([]) %}
+{% set ungrouped = lines|filter(l => l.groupKey is empty) %}
+{% set groupedLines = lines|filter(l => l.groupKey is not empty) %}
+
+{% set receiptGroups = {} %}
+{% for line in groupedLines %}
+    {% set gk = line.groupKey %}
+    {% set group = receiptGroups[gk]|default({ title: line.groupTitle ?? gk, items: {} }) %}
+    {% set it = line.itemTitle ?? '-' %}
+    {% set itemLines = group.items[it]|default([])|merge([line]) %}
+    {% set items = group.items|merge({ (it): itemLines }) %}
+    {% set receiptGroups = receiptGroups|merge({ (gk): { title: group.title, items: items } }) %}
+{% endfor %}
+
+<div class="yw-summary-body">
+    {% if ungrouped|length > 0 %}
+        <section class="yw-summary-section">
+            <dl class="yw-summary-list">
+                {% for line in ungrouped %}
+                    <div class="yw-summary-row">
+                        <dt>{{ line.label ?? '-' }}</dt>
+                        <dd>{{ (line.amountCents / 100)|format_currency('EUR') }}</dd>
+                    </div>
+                {% endfor %}
+            </dl>
+        </section>
+    {% endif %}
+
+    {% for gk, group in receiptGroups %}
+        <section class="yw-summary-section">
+            <h3 class="yw-summary-group-title">{{ group.title }}</h3>
+            {% for itemTitle, lines in group.items %}
+                <div class="yw-summary-item">
+                    <h4 class="yw-summary-item-label">{{ itemTitle }}</h4>
+                    <div class="yw-summary-item-details">
+                        {% for line in lines %}
+                            <span class="yw-summary-badge">
+                                 {{ line.label ?? line.name }}
+                                {% if line.amountCents > 0 %}
+                                    <span class="yw-summary-price">(+{{ (line.amountCents / 100)|format_currency('EUR') }})</span>
+                                {% endif %}
+                            </span>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+        </section>
+    {% endfor %}
+</div>

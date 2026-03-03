@@ -1,0 +1,13 @@
+{% trans_default_domain 'yiggle_form_wizard' %}
+
+<div class="yw-content">
+    {% if currentStepTitle %}
+        <h1 class="yw-title">{{ currentStepTitle }}</h1>
+    {% endif %}
+
+    {% if currentStepIntro %}
+        <p class="yw-lead">{{ currentStepIntro }}</p>
+    {% endif %}
+
+    {% include '@YiggleFormWizard/components/wizard/_fields.html.twig' with { form: form } only %}
+</div>

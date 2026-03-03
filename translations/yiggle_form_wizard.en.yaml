@@ -1,0 +1,106 @@
+yiggle_form_wizard:
+  validation:
+    required: "This field is required."
+    email_invalid: "Please enter a valid email address."
+    min_number: "The value must be at least {{ value }}."
+    max_number: "The value may not exceed {{ value }}."
+    must_accept: "You must accept the terms and conditions."
+
+  choice:
+    placeholder: "Make a selection..."
+
+  navigation:
+    forms: "Form Wizards"
+
+  forms: "Form Wizards"
+
+  tabs:
+    steps: "Wizard Steps"
+    email: "Email Settings"
+
+  title: "Title"
+  enabled: "Enabled"
+  webspace: "Webspace"
+  website_configuration: "Website Configuration"
+  submit_label: "Submit Button Label"
+  payment_mode: "Payment Method"
+  success_text: "Success Message"
+
+  steps: "Steps"
+  step: "Step"
+  step_title: "Step Title"
+  fields: "Fields"
+
+  field:
+    type:
+      text: "Text"
+      email: "Email"
+      tel: "Phone"
+      integer: "Number"
+      checkbox: "Checkbox"
+      choice: "Select"
+      textarea: "Textarea"
+      date: "Date"
+    width: "Width"
+    placeholder: "Placeholder"
+    options: "Options (one per line)"
+    min: "Minimum"
+    max: "Maximum"
+    multiple: "Allow multiple selections"
+    expanded: "Display as radio/checkboxes"
+    rows: "Number of rows"
+
+  email:
+    subject: "Subject"
+    from_email: "Sender Email"
+    from_name: "Sender Name"
+    customer_email_field: "Customer Email Field"
+    disable_admin: "Disable admin emails"
+    disable_customer: "Disable customer emails"
+    include_copy: "Include copy"
+    receivers: "Admin Recipients"
+    receiver_type: "Type"
+
+  choices:
+    none: "None"
+    afterward: "Afterwards"
+    required: "Required"
+    to: "To"
+    cc: "CC"
+    bcc: "BCC"
+
+  form_wizard:
+    success: "Thank you! Your registration has been received."
+
+  dynamic_form_wizard: "Form Wizards"
+
+  wizard:
+    step_instruction: "Fill in the fields below to continue."
+    prev: "Previous"
+    next: "Next"
+    finish: "Submit"
+    success_title: "Thank you!"
+    success_default_text: "Your submission has been successfully received."
+    back_home: "Back to home"
+    default_title: "Register"
+    current_step: "Current step"
+    reset: "Start over"
+
+    receipt:
+      title: "Summary"
+      total: "Total"
+
+    success:
+      title: "Success!"
+      text: "Thank you for your registration."
+      cta: "Back"
+
+    payment:
+      redirecting: "You are being redirected to the payment page…"
+
+  mail:
+    admin:
+      default_subject: "New registration on website"
+
+  payment:
+    redirecting: "You are being redirected to the payment page…"

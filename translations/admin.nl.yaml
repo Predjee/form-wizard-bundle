@@ -1,0 +1,149 @@
+yiggle_form_wizard:
+  forms: "Formulier Wizards"
+
+  tabs:
+    steps: "Wizard Stappen"
+    email: "E-mail Instellingen"
+
+  choices:
+    none: "Geen"
+    afterward: "Achteraf"
+    required: "Verplicht"
+    to: "Aan"
+    cc: "CC"
+    bcc: "BCC"
+
+  export:
+    button_label: "Exporteren"
+    preparing: "Export wordt voorbereid, de download start zodra hij klaar is."
+    success: "Export is klaar en wordt gedownload."
+    error: "Er is iets misgegaan bij de export. Probeer het opnieuw."
+    error_no_id: "Geen record geselecteerd om te exporteren."
+
+  admin:
+    title: "Titel"
+    enabled: "Ingeschakeld"
+    display_settings: "Weergave instellingen"
+    show_summary: "Toon samenvatting"
+    show_summary_final_step: "Toon een samenvatting op de laatste stap"
+    show_receipt: "Toon kassabon"
+    submit_label: "Tekst verzendknop"
+    payment_mode: "Betaalmodus"
+    fixed_amount: "Vast bedrag"
+    success_title: "Succes titel"
+    success_text: "Succesbericht"
+    success_link: "Succes link"
+    website_configuration: "Website configuratie"
+    render_variant: "Weergave variant"
+
+    steps: "Stappen"
+    step: "Stap"
+    step_title: "Stap titel"
+    step_instruction: "Stap instructie"
+    fields: "Velden"
+
+    email:
+      subject: "E-mail onderwerp"
+      from_email: "Afzender e-mailadres"
+      from_name: "Afzender naam"
+      customer_email_field: "E-mail veld klant"
+      disable_admin: "Admin e-mails uitschakelen"
+      disable_customer: "Klant e-mails uitschakelen"
+      include_copy: "Kopie formulier meesturen"
+      receivers: "Ontvangers"
+      receiver_type: "Type ontvanger"
+      receiver_email: "E-mailadres ontvanger"
+      receiver_name: "Naam ontvanger"
+      admin_email_text: "Admin e-mail intro"
+      customer_email_text: "Klant e-mail intro"
+
+    choices:
+      none: "Geen"
+      required: "Verplicht"
+      to: "Aan"
+      cc: "CC"
+      bcc: "BCC"
+
+    field:
+      width: "Breedte"
+      name: "Naam (key)"
+      label: "Label"
+      required: "Verplicht"
+      include_in_admin_mail: "Meenemen in admin e-mail"
+      include_in_customer_mail: "Meenemen in bevestigingsmail"
+
+      receipt:
+        label: "Kassabon label"
+        radio:
+          yes_label: "Kassabon label (Ja)"
+          no_label: "Kassabon label (Nee)"
+
+      type:
+        text: "Tekstveld"
+        textarea: "Tekstveld (meerdere regels)"
+        email: "E-mailadres"
+        tel: "Telefoonnummer"
+        date: "Datum"
+        integer: "Getal (heel)"
+        number: "Getal (decimal)"
+        checkbox: "Checkbox"
+        checkbox_with_price: "Checkbox (met prijs)"
+        choice_with_price: "Keuzeveld (met prijs)"
+        radio_with_price: "Radio (met prijs)"
+        wizard_repeatable_group: "Herhaalbare groep"
+
+      text:
+        placeholder: "Placeholder"
+        help: "Helptekst"
+
+      textarea:
+        placeholder: "Placeholder"
+        help: "Helptekst"
+        rows: "Aantal rijen"
+
+      email:
+        placeholder: "Placeholder"
+        help: "Helptekst"
+
+      tel:
+        placeholder: "Placeholder"
+        help: "Helptekst"
+
+      date:
+        min: "Min. datum (YYYY-MM-DD)"
+        max: "Max. datum (YYYY-MM-DD)"
+
+      integer:
+        min: "Minimum"
+        max: "Maximum"
+
+      number:
+        min: "Minimum"
+        max: "Maximum"
+        step: "Stapgrootte (bv 0.01)"
+
+      checkbox:
+        default_checked: "Standaard aangevinkt"
+
+      checkbox_with_price:
+        default_checked: "Standaard aangevinkt"
+        price: "Prijs"
+
+      choice:
+        presentation: "Weergave"
+        multiple: "Meerdere keuzes mogelijk"
+        options_with_price: "Opties met prijs"
+        option: "Optie"
+        price: "Prijs"
+
+      radio_with_price:
+        yes_label: "Label 'Ja'"
+        no_label: "Label 'Nee'"
+        price_cents: "Prijs bij 'Ja'"
+
+      repeatable_group:
+        min_rows: "Minimum aantal rijen"
+        max_rows: "Maximum aantal rijen"
+        add_label: "Label knop 'Toevoegen'"
+        remove_label: "Label knop 'Verwijderen'"
+        row_fields: "Velden per rij"

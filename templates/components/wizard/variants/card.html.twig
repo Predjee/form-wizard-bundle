@@ -1,0 +1,39 @@
+<div class="yw-card">
+    {{ form_start(form, {
+        attr: {
+            'data-controller': 'yiggle--form-wizard-bundle--receipt-trigger',
+            'data-yiggle--form-wizard-bundle--receipt-trigger-url-value': path('fw_wizard_preview', { id: wizardId }),
+            'data-yiggle--form-wizard-bundle--receipt-trigger-target': 'form',
+            'data-action': 'turbo:submit-end->yiggle--form-wizard-bundle--receipt-trigger#submitEnd'
+        }
+    }) }}
+
+    {% if stepCount > 1 %}
+        {% include '@YiggleFormWizard/components/wizard/_header.html.twig' with {
+            stepIndex: stepIndex,
+            stepCount: stepCount,
+            stepsView: stepsView,
+            form:      form,
+            wizard:    wizard
+        } only %}
+    {% endif %}
+
+    <div class="yw-layout {{ wizard.getShowReceipt() ? 'yw-has-receipt' : '' }}">
+        <main class="yw-main">
+            {% if currentStepEntity %}
+                <h1 class="yw-title">{{ currentStepEntity.title }}</h1>
+                <p class="yw-lead">{{ currentStepEntity.stepInstruction|raw }}</p>
+            {% endif %}
+
+            {% include '@YiggleFormWizard/components/wizard/_fields.html.twig' with { form: form } only %}
+            {% include '@YiggleFormWizard/components/wizard/_actions.html.twig' with { form: form } only %}
+        </main>
+
+        {% if wizard.getShowReceipt() %}
+            {% include '@YiggleFormWizard/components/wizard/_sidebar.html.twig' with { receipt: receipt } only %}
+        {% endif %}
+    </div>
+
+    <div style="display:none">{{ form_rest(form) }}</div>
+    {{ form_end(form) }}
+</div>

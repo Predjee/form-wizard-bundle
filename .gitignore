@@ -1,0 +1,28 @@
+# Composer
+/vendor/
+
+# Symfony
+/var/
+/public/bundles/
+
+# PHPUnit
+/.phpunit.result.cache
+/phpunit.xml
+/phpunit.xml.dist.bak
+
+# IDEs
+/.idea/
+/.vscode/
+
+# OS junk
+.DS_Store
+.DS_Store?
+._*
+__MACOSX/
+
+# Logs
+*.log
+
+# Cache
+.cache/
+/tests/Kernel/var/

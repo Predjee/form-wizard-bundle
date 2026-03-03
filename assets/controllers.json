@@ -1,0 +1,10 @@
+{
+  "controllers": {
+    "receipt-trigger": {
+      "main": "assets/controllers/receipt_trigger_controller.js",
+      "fetch": "eager",
+      "enabled": true
+    }
+  },
+  "entrypoints": []
+}

@@ -1,0 +1,79 @@
+{
+  "name": "yiggle/form-wizard-bundle",
+  "type": "symfony-bundle",
+  "description": "Sulu 3 Form Wizard routing via Sulu Route + RoutableInterface",
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "Yiggle\\FormWizardBundle\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Yiggle\\FormWizardBundle\\Tests\\": "tests/"
+    }
+  },
+  "require": {
+    "php": "^8.4",
+    "doctrine/doctrine-bundle": "^2.13",
+    "doctrine/orm": "^2.20 || ^3.0",
+    "phpdocumentor/type-resolver": "^1.7 || ^2.0",
+    "phpstan/phpdoc-parser": "^2.3",
+    "sulu/sulu": "^3.0",
+    "symfony/framework-bundle": "^7.4 || ^8.0",
+    "symfony/form": "^7.4 || ^8.0",
+    "symfony/mailer": "^7.4 || ^8.0",
+    "symfony/mime": "^7.4 || ^8.0",
+    "symfony/security-csrf": "^7.4 || ^8.0",
+    "symfony/twig-bundle": "^7.4 || ^8.0",
+    "symfony/translation": "^7.4 || ^8.0",
+    "symfony/validator": "^7.4 || ^8.0"
+  },
+  "suggest": {
+    "symfony/stimulus-bundle": "Optional: enables StimulusJS progressive enhancement for AJAX-like multi-step UX.",
+    "symfony/ux-turbo": "Optional: enables <turbo-frame> progressive enhancement for AJAX-like multi-step UX.",
+    "mollie/mollie-api-php": "Optional: required only if you use the Mollie payment integration."
+  },
+  "require-dev": {
+    "symfony/ux-turbo": "^2.32",
+    "friendsofphp/php-cs-fixer": "^3.70",
+    "phpstan/phpstan": "^2.0",
+    "phpstan/phpstan-phpunit": "^2.0",
+    "phpstan/phpstan-symfony": "^2.0",
+    "phpstan/phpstan-doctrine": "^2.0",
+    "phpstan/extension-installer": "^1.4",
+    "phpunit/phpunit": "^12",
+    "rector/rector": "^2.0",
+    "symfony/browser-kit": "^7.4 || ^8.0",
+    "symfony/dotenv": "^7.4 || ^8.0",
+    "symfony/phpunit-bridge": "^8.0",
+    "symplify/easy-coding-standard": "^12.5",
+    "mollie/mollie-api-php": "^3.9"
+  },
+  "extra": {
+    "symfony": {
+      "bundle-class": "Yiggle\\FormWizardBundle\\YiggleFormWizardBundle"
+    },
+    "sulu": {
+      "js-path": "assets/admin/index.js"
+    }
+  },
+  "scripts": {
+    "analyse": "vendor/bin/phpstan analyse -c phpstan.neon --no-progress --memory-limit 512M",
+    "cs": "vendor/bin/ecs check",
+    "cs-fix": "vendor/bin/ecs check --fix",
+    "qa": [
+      "@cs",
+      "@analyse",
+      "@test"
+    ],
+    "rector": "vendor/bin/rector process",
+    "test": "vendor/bin/phpunit -c phpunit.xml.dist"
+  },
+  "config": {
+    "allow-plugins": {
+      "php-http/discovery": true,
+      "phpstan/extension-installer": true
+    }
+  }
+}

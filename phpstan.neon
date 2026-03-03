@@ -1,0 +1,27 @@
+parameters:
+    level: 7
+    paths:
+        - src
+        - tests
+    tmpDir: var/phpstan
+    bootstrapFiles:
+        - vendor/autoload.php
+    scanDirectories:
+        - vendor/mollie/mollie-api-php/src
+
+    ignoreErrors:
+        # Alleen echte doctrine/mapping issues
+        -
+            message: '#Property .* type mapping mismatch#'
+            path: src/Entity/*
+
+        # Generics voor controllers zijn vaak overkill, deze mag blijven
+        -
+            identifier: missingType.generics
+            path: src/Presentation/Web/Controller/WizardContentController.php
+
+    # Symfony specifieke instellingen
+    symfony:
+        constantHassers: false
+
+    treatPhpDocTypesAsCertain: false

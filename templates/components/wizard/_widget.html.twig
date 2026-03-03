@@ -1,0 +1,11 @@
+<turbo-frame id="wizard-frame-{{ wizardId }}">
+    {% include '@YiggleFormWizard/components/wizard/_widget_inner.html.twig' with {
+        wizard: wizard,
+        wizardId: wizardId,
+        form: form,
+        receipt: receipt,
+        isCompleted: isCompleted,
+        variantTemplate: variantTemplate,
+        showReceipt: showReceipt
+    } only %}
+</turbo-frame>

@@ -1,0 +1,111 @@
+yiggle_form_wizard:
+  validation:
+    required: "Dit veld is verplicht."
+    email_invalid: "Voer een geldig e-mailadres in."
+    min_number: "De waarde moet minimaal {{ value }} zijn."
+    max_number: "De waarde mag maximaal {{ value }} zijn."
+    must_accept: "U moet akkoord gaan met de voorwaarden."
+  choice:
+    placeholder: "Maak een keuze..."
+  navigation:
+    forms: "Formulier Wizards"
+  title: "Titel"
+  enabled: "Ingeschakeld"
+  webspace: "Webspace"
+  website_configuration: "Website Configuratie"
+  submit_label: "Verzendknop Tekst"
+  payment_mode: "Betaalmethode"
+  success_text: "Succesbericht"
+  steps: "Stappen"
+  step: "Stap"
+  step_title: "Stap Titel"
+  fields: "Velden"
+  field:
+    choice:
+      select_option: "Maak je keuze..."
+    type:
+      text: Tekst
+      email: E-mail
+      tel: Telefoon
+      integer: Getal
+      checkbox: Checkbox
+      choice: Keuzelijst
+      textarea: Tekstvak
+      date: Datum
+    width: Breedte
+    placeholder: Placeholder
+    options: "Opties (1 per regel)"
+    min: Minimum
+    max: Maximum
+    multiple: Meerdere keuzes
+    expanded: Toon als radio/checkboxes
+    rows: Aantal regels
+    checkbox:
+      receipt:
+        default_label: 'Ja'
+    radio:
+      receipt:
+        true_label: 'Ja'
+        false_label: 'Nee'
+  form_wizard:
+    success: "Bedankt voor het invullen van het formulier."
+    navigation: 'Navigatie'
+  dynamic_form_wizard: "Formulier Wizards"
+  wizard:
+    step_instruction: "Vul de onderstaande velden in om door te gaan."
+    prev: "Vorige"
+    next: "Volgende"
+    finish: "Verzenden"
+    success_title: "Bedankt!"
+    success_default_text: "Uw inzending is succesvol ontvangen."
+    back_home: "Terug naar start"
+    default_title: "Inschrijven"
+    current_step: "Huidige stap"
+    reset: "Opnieuw beginnen"
+    row_label: "Rij toevoegen"
+    remove_row: "Verwijder rij"
+    receipt:
+      title: "Overzicht"
+      total: "Totaal"
+      empty: 'Nog niets toegevoegd.'
+    success:
+      title: "Gelukt!"
+      text: "Bedankt voor je inschrijving."
+      cta: "Terug"
+    payment:
+      redirecting: "Je wordt doorgestuurd naar de betaalpagina…"
+    step: 'Stap'
+    steps: 'Stappen'
+    summary:
+      title: 'Samenvatting'
+      subtitle: 'Subtitel'
+      details_title: 'Details'
+  mail:
+    admin:
+      default_subject: "Nieuwe inschrijving op website"
+  payment:
+    redirecting: "Je wordt doorgestuurd naar de betaalpagina…"
+  current_step: 'Huidige stap'
+  receipt:
+    title: 'Samenvatting'
+    success:
+      cta: 'Bedankt'
+    total: 'Totaal'
+    empty: 'Maak uw keuze'
+  admin:
+    field:
+      tel:
+        invalid_format: 'Ongeldige telefoonnummerformaat'
+      email:
+        invalid_format: 'Ongeldige e-mailadresformaat'
+      date:
+        min: 'Datum moet na'
+        max: 'Datum moet voor'
+      range:
+        min: 'Minimum moet groter zijn dan'
+        max: 'Maximum moet kleiner zijn dan'
+  success:
+    link_label: 'Bedankt'
+  email:
+    summary_title: 'Ingevulde gegevens'
+

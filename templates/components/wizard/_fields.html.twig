@@ -1,0 +1,19 @@
+{# @YiggleFormWizard/components/wizard/_fields.html.twig #}
+{% trans_default_domain 'yiggle_form_wizard' %}
+
+{% set stepGroup = null %}
+{% for child in form %}
+    {% if stepGroup is null and child.vars.name != 'navigator' and child.vars.name != '_token' %}
+        {% set stepGroup = child %}
+    {% endif %}
+{% endfor %}
+
+{% set fields = (stepGroup and stepGroup.vars.compound) ? stepGroup : form %}
+
+<div class="yw-field-grid" role="group">
+    {% for field in fields %}
+        {% if field.vars.name != 'navigator' and field.vars.name != '_token' %}
+            {{ form_row(field) }}
+        {% endif %}
+    {% endfor %}
+</div>

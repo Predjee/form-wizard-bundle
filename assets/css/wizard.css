@@ -1,0 +1,969 @@
+/* ==========================================================================
+   Yiggle Form Wizard – framework-agnostic styles (Bootstrap-safe)
+   Notes:
+   - Everything is scoped to .yw-shell to prevent Bootstrap (or other CSS) from overriding.
+   - Avoids heavy "*" font forcing; only sets font on the shell root.
+   - Adds "reset-proof" button/input styling.
+   ========================================================================== */
+
+:root {
+    --yw-bg: #f8fafc;
+    --yw-card: #ffffff;
+    --yw-text: #0f172a;
+    --yw-muted: #64748b;
+    --yw-border: #e2e8f0;
+
+    --yw-primary: #a3c644;
+    --yw-primary-dark: #8fb134;
+    --yw-primary-soft: rgba(163, 198, 68, 0.12);
+
+    --yw-danger: #e11d48;
+    --yw-danger-bg: rgba(225, 29, 72, 0.08);
+    --yw-danger-border: rgba(225, 29, 72, 0.25);
+
+    --yw-radius-xl: 24px;
+    --yw-radius-lg: 16px;
+    --yw-radius-md: 12px;
+
+    --yw-shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
+
+    --yw-gap: 1rem;
+    --yw-radius: 16px;
+    --yw-padding: 1.25rem;
+}
+
+/* ==========================================================================
+   Base scope
+   ========================================================================== */
+
+.yw-shell,
+.yw-shell * {
+    box-sizing: border-box;
+}
+
+/* Keep font decision at the shell root (not on *) */
+.yw-shell {
+    font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    background: var(--yw-bg);
+    padding: 0;
+}
+
+/* ==========================================================================
+   Card / layout
+   ========================================================================== */
+
+.yw-shell .yw-card {
+    max-width: 100%;
+    margin: 0;
+    background: var(--yw-card);
+    display: flex;
+    flex-direction: column;
+}
+
+@media (min-width: 1024px) {
+    .yw-shell {
+        padding: 40px 20px;
+    }
+
+    .yw-shell .yw-card {
+        max-width: 1200px;
+        margin: 0 auto;
+        border-radius: var(--yw-radius-xl);
+        box-shadow: var(--yw-shadow-lg);
+        border: 1px solid var(--yw-border);
+        overflow: hidden; /* helps rounded corners remain visible with inner areas */
+    }
+
+    .yw-shell .yw-layout.yw-has-receipt .yw-aside {
+        border-bottom-right-radius: var(--yw-radius-xl);
+    }
+
+    .yw-shell .yw-layout.yw-has-receipt .yw-main {
+        border-bottom-left-radius: var(--yw-radius-xl);
+    }
+}
+
+.yw-shell .yw-header {
+    padding: 24px 20px;
+    border-bottom: 1px solid var(--yw-border);
+}
+
+@media (min-width: 1024px) {
+    .yw-shell .yw-header {
+        padding: 32px 40px;
+    }
+}
+
+/* ==========================================================================
+   Progress + stepper
+   ========================================================================== */
+
+.yw-shell .yw-progress {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-grow: 1;
+    margin-bottom: 20px;
+}
+
+.yw-shell .yw-progress-track {
+    flex-grow: 1;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--yw-border);
+    overflow: hidden;
+}
+
+.yw-shell .yw-progress-fill {
+    height: 100%;
+    background: var(--yw-primary);
+    transition: width 0.6s ease;
+}
+
+.yw-shell .yw-progress-meta {
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--yw-text);
+}
+
+.yw-shell .yw-stepper {
+    display: none;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    gap: 32px;
+}
+
+@media (min-width: 1024px) {
+    .yw-shell .yw-stepper {
+        display: flex;
+    }
+}
+
+.yw-shell .yw-stepper-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--yw-muted);
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.yw-shell .yw-stepper-dot {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    border: 2px solid var(--yw-border);
+}
+
+.yw-shell .yw-stepper-item.is-current {
+    color: var(--yw-text);
+}
+
+.yw-shell .yw-stepper-item.is-current .yw-stepper-dot {
+    border-color: var(--yw-primary);
+    background: var(--yw-primary-soft);
+    color: var(--yw-primary-dark);
+}
+
+/* ==========================================================================
+   Main/aside grid
+   ========================================================================== */
+
+.yw-shell .yw-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+}
+
+@media (min-width: 1024px) {
+    .yw-shell .yw-layout.yw-has-receipt {
+        grid-template-columns: 1fr 380px;
+    }
+}
+
+.yw-shell .yw-main {
+    padding: 24px 20px 100px;
+}
+
+@media (min-width: 1024px) {
+    .yw-shell .yw-main {
+        padding: 40px;
+    }
+}
+
+.yw-shell .yw-title {
+    margin: 0 0 8px;
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--yw-text);
+}
+
+.yw-shell .yw-lead {
+    margin: 0 0 32px;
+    color: var(--yw-muted);
+    line-height: 1.6;
+}
+
+/* ==========================================================================
+   Field grid
+   ========================================================================== */
+
+.yw-shell .yw-field-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+}
+
+.yw-shell .yw-field {
+    width: 100%;
+    max-width: 100%;
+}
+
+@media (min-width: 768px) {
+    .yw-shell .yw-field-grid {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 24px;
+    }
+
+    /* Modern approach kept; if you need max compatibility, replace with classes */
+    .yw-shell .yw-field {
+        grid-column: span min(12, var(--yw-col, 12));
+    }
+}
+
+.yw-shell .yw-label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--yw-text);
+}
+
+/* Optional required marker (if you add markup for it) */
+.yw-shell .yw-required {
+    margin-left: 4px;
+    color: var(--yw-danger);
+    font-weight: 600;
+}
+
+/* ==========================================================================
+   Inputs (Bootstrap-safe)
+   ========================================================================== */
+
+.yw-shell .yw-input {
+    width: 100%;
+    min-height: 52px;             /* use min-height; avoids some UA/button conflicts */
+    padding: 12px 16px;
+    border-radius: var(--yw-radius-md);
+    border: 1px solid var(--yw-border);
+    background: #fff;
+    font-size: 16px;
+    line-height: 1.25;
+    box-sizing: border-box;
+
+    /* "Reset-proof" vs frameworks */
+    appearance: none;
+    -webkit-appearance: none;
+
+    /* Prevent bootstrap shadows etc. */
+    box-shadow: none;
+    outline: none;
+}
+
+.yw-shell .yw-input:focus {
+    border-color: rgba(163, 198, 68, 0.75);
+    box-shadow: 0 0 0 4px rgba(163, 198, 68, 0.14);
+}
+
+.yw-shell textarea.yw-input {
+    height: auto;
+    min-height: 120px;
+    resize: vertical;
+}
+
+/* Select arrow consistency (optional, if you use select.yw-input) */
+.yw-shell select.yw-input {
+    background-image: none;
+}
+
+/* ==========================================================================
+   Actions + buttons (Bootstrap-safe)
+   ========================================================================== */
+
+.yw-shell .yw-actions {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid var(--yw-border);
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 12px;
+}
+
+.yw-shell .yw-actions-left,
+.yw-shell .yw-actions-right {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Main button primitive */
+.yw-shell .yw-btn {
+    width: 100%;
+    padding: 14px 24px;
+    border-radius: var(--yw-radius-md);
+    font-weight: 700;
+    cursor: pointer;
+    text-align: center;
+    border: 1px solid transparent;
+    transition: background-color 0.2s, border-color 0.2s, transform 0.1s;
+
+    /* Reset-proof */
+    appearance: none;
+    -webkit-appearance: none;
+    box-shadow: none;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.1;
+}
+
+.yw-shell .yw-btn:active {
+    transform: translateY(1px);
+}
+
+.yw-shell .yw-btn-primary {
+    background: var(--yw-primary);
+    color: #fff;
+}
+
+.yw-shell .yw-btn-primary:hover {
+    background: var(--yw-primary-dark);
+}
+
+.yw-shell .yw-btn-secondary {
+    background: #f1f5f9;
+    color: var(--yw-text);
+    border-color: transparent;
+}
+
+@media (min-width: 768px) {
+    .yw-shell .yw-actions {
+        flex-direction: row;
+        justify-content: space-between;
+    }
+
+    .yw-shell .yw-actions-left,
+    .yw-shell .yw-actions-right {
+        flex-direction: row;
+        width: auto;
+    }
+
+    .yw-shell .yw-btn {
+        width: auto;
+        min-width: 140px;
+    }
+}
+
+.yw-shell .yw-reset-wrapper {
+    text-align: center;
+    margin-top: 24px;
+}
+
+.yw-shell .yw-btn-link-muted {
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--yw-muted);
+    font-size: 13px;
+    text-decoration: underline;
+    cursor: pointer;
+
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.yw-shell .yw-btn-link-muted:hover {
+    color: var(--yw-danger);
+}
+
+/* ==========================================================================
+   Aside / receipt
+   ========================================================================== */
+
+.yw-shell .yw-aside {
+    display: none;
+    background: #fcfcfd;
+    border-left: 1px solid var(--yw-border);
+    padding: 40px 32px;
+}
+
+@media (min-width: 1024px) {
+    .yw-shell .yw-aside {
+        display: block;
+    }
+}
+
+.yw-shell .yw-aside-card {
+    position: sticky;
+    top: 40px;
+}
+
+.yw-shell .yw-receipt-lines {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.yw-shell .yw-receipt-title {
+    font-size: 12px;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--yw-muted);
+    margin-bottom: 24px;
+}
+
+.yw-shell .yw-receipt-line {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 12px;
+    font-size: 15px;
+}
+
+.yw-shell .yw-aside .yw-receipt-line {
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+.yw-shell .yw-receipt-line > div:last-child,
+.yw-shell .yw-receipt-total-value,
+.yw-shell .yw-mobile-total-value {
+    font-variant-numeric: tabular-nums;
+}
+
+.yw-shell .yw-receipt-line small {
+    display: block;
+    margin-top: 2px;
+    color: var(--yw-muted);
+    font-size: 12px;
+    line-height: 1.3;
+}
+
+.yw-shell .yw-receipt > .yw-receipt-lines {
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--yw-border);
+}
+
+.yw-shell .yw-receipt-total {
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 2px solid var(--yw-border);
+    display: flex;
+    justify-content: space-between;
+    font-weight: 800;
+    font-size: 18px;
+}
+
+.yw-shell .yw-receipt-group {
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--yw-border);
+}
+
+.yw-shell .yw-receipt-group-title {
+    font-weight: 700;
+    font-size: 14px;
+    margin: 0 0 0.5rem;
+}
+
+.yw-shell .yw-receipt-group-item {
+    margin: 0.25rem 0 0.5rem;
+}
+
+.yw-shell .yw-receipt-group-item-title {
+    opacity: 0.85;
+    font-weight: 600;
+    font-size: 13px;
+    margin: 0.5rem 0 0.25rem;
+}
+
+.yw-shell .yw-receipt-group .yw-receipt-lines {
+    margin-top: 0.25rem;
+    padding-left: 0;
+}
+
+/* ==========================================================================
+   Mobile receipt
+   ========================================================================== */
+
+.yw-shell .yw-receipt-mobile {
+    display: block;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1000;
+    background: #fff;
+    border-top: 1px solid var(--yw-border);
+    box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.1);
+}
+
+@media (min-width: 1024px) {
+    .yw-shell .yw-receipt-mobile {
+        display: none;
+    }
+}
+
+.yw-shell #yw-receipt-toggle {
+    display: none;
+}
+
+.yw-shell .yw-mobile-header {
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+}
+
+.yw-shell .yw-mobile-total-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--yw-muted);
+}
+
+.yw-shell .yw-mobile-total-label::after {
+    content: " ▼";
+    font-size: 10px;
+    transition: transform 0.3s;
+    display: inline-block;
+}
+
+.yw-shell .yw-mobile-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.2s ease-out;
+}
+
+.yw-shell #yw-receipt-toggle:checked ~ .yw-mobile-body {
+    max-height: 60vh;
+    padding: 0 20px 20px;
+    overflow-y: auto;
+}
+
+.yw-shell #yw-receipt-toggle:checked ~ .yw-mobile-header .yw-mobile-total-label::after {
+    transform: rotate(180deg);
+}
+
+.yw-shell .yw-mobile-line {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.yw-shell .yw-mobile-group-title {
+    margin-top: 0.75rem;
+    font-weight: 600;
+}
+
+.yw-shell .yw-mobile-item-title {
+    margin-top: 0.5rem;
+    opacity: 0.85;
+    font-weight: 500;
+}
+
+.yw-shell .yw-mobile-line-meta {
+    opacity: 0.75;
+    font-size: 0.875rem;
+}
+
+/* ==========================================================================
+   Repeatable groups
+   ========================================================================== */
+
+.yw-shell .yw-repeatable-group {
+    display: block;
+    width: 100%;
+}
+
+.yw-shell .yw-repeatable-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.yw-shell .yw-repeatable-row {
+    background: #fff;
+    border: 1px solid var(--yw-border);
+    border-radius: var(--yw-radius-lg);
+    padding: 16px;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.02);
+}
+
+.yw-shell .yw-repeatable-row-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.yw-shell .yw-repeatable-row-title {
+    font-weight: 800;
+    color: var(--yw-text);
+    font-size: 14px;
+}
+
+.yw-shell .yw-repeatable-row-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Remove button styling (keep scoped) */
+.yw-shell .yw-btn-remove,
+.yw-shell .yw-repeatable-row-actions button {
+    appearance: none;
+    -webkit-appearance: none;
+
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--yw-danger);
+    font-weight: 700;
+    font-size: 14px;
+    padding: 8px 10px;
+    border-radius: var(--yw-radius-md);
+    cursor: pointer;
+    line-height: 1;
+    box-shadow: none;
+}
+
+.yw-shell .yw-btn-remove:hover,
+.yw-shell .yw-repeatable-row-actions button:hover {
+    background: var(--yw-danger-bg);
+    border-color: var(--yw-danger-border);
+}
+
+.yw-shell .yw-repeatable-row .yw-field-grid {
+    gap: 16px;
+}
+
+@media (min-width: 768px) {
+    .yw-shell .yw-repeatable-row .yw-field-grid {
+        gap: 20px;
+    }
+}
+
+.yw-shell .yw-repeatable-actions {
+    margin-top: 14px;
+}
+
+/* Add button styling (repeatable) */
+.yw-shell .yw-btn-add,
+.yw-shell .yw-repeatable-actions button,
+.yw-shell .yw-repeatable-actions input[type="submit"],
+.yw-shell .yw-repeatable-actions input[type="button"] {
+    appearance: none;
+    -webkit-appearance: none;
+
+    border: 1px solid var(--yw-border);
+    background: #fff;
+    color: var(--yw-text);
+    font-weight: 800;
+    border-radius: var(--yw-radius-md);
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s, transform 0.1s;
+    width: 100%;
+    text-align: center;
+    box-shadow: none;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.1;
+}
+
+.yw-shell .yw-btn-add:active,
+.yw-shell .yw-repeatable-actions button:active,
+.yw-shell .yw-repeatable-actions input[type="submit"]:active,
+.yw-shell .yw-repeatable-actions input[type="button"]:active {
+    transform: translateY(1px);
+}
+
+.yw-shell .yw-btn-add:hover,
+.yw-shell .yw-repeatable-actions button:hover,
+.yw-shell .yw-repeatable-actions input[type="submit"]:hover,
+.yw-shell .yw-repeatable-actions input[type="button"]:hover {
+    background: #f8fafc;
+    border-color: rgba(226, 232, 240, 0.9);
+}
+
+@media (min-width: 768px) {
+    .yw-shell .yw-btn-add,
+    .yw-shell .yw-repeatable-actions button,
+    .yw-shell .yw-repeatable-actions input[type="submit"],
+    .yw-shell .yw-repeatable-actions input[type="button"] {
+        width: auto;
+        min-width: 200px;
+    }
+}
+
+/* Checkbox card */
+.yw-shell .yw-checkbox-card {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding: 14px 14px;
+    border: 1px solid var(--yw-border);
+    border-radius: var(--yw-radius-md);
+    background: #fff;
+}
+
+.yw-shell .yw-checkbox-label {
+    font-weight: 700;
+    color: var(--yw-text);
+    cursor: pointer;
+}
+
+/* Error coloring inside repeatables */
+.yw-shell .yw-repeatable-row .form-error-message,
+.yw-shell .yw-repeatable-row .invalid-feedback,
+.yw-shell .yw-repeatable-row ul li {
+    color: var(--yw-danger);
+}
+
+/* ==========================================================================
+   Variants: inline + minimal
+   ========================================================================== */
+
+.yw-shell .yw-variant-inline {
+    background: transparent;
+}
+
+.yw-shell .yw-inline {
+    max-width: 100%;
+    margin: 0;
+    background: transparent;
+}
+
+@media (min-width: 1024px) {
+    .yw-shell .yw-inline {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+}
+
+.yw-shell .yw-inline__body {
+    padding: 24px 20px 60px;
+}
+
+@media (min-width: 1024px) {
+    .yw-shell .yw-inline__body {
+        padding: 32px 40px 80px;
+    }
+}
+
+.yw-shell .yw-inline__receipt {
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid var(--yw-border);
+}
+
+.yw-shell .yw-minimal {
+    max-width: 100%;
+    margin: 0;
+    background: transparent;
+}
+
+@media (min-width: 1024px) {
+    .yw-shell .yw-minimal {
+        max-width: 680px;
+        margin: 0 auto;
+    }
+}
+
+.yw-shell .yw-minimal__actions {
+    margin-top: 24px;
+}
+
+.yw-shell .yw-inline__actions {
+    margin-top: 1rem;
+}
+
+/* ==========================================================================
+   Help + errors
+   ========================================================================== */
+
+.yw-shell .yw-help {
+    margin-top: 6px;
+    font-size: 0.875rem;
+    line-height: 1.3;
+    color: var(--yw-muted);
+}
+
+.yw-shell .yw-errors {
+    margin: 6px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.yw-shell .yw-error {
+    font-size: 0.875rem;
+    color: var(--yw-danger);
+}
+
+/* ==========================================================================
+   Success / summary
+   ========================================================================== */
+
+.yw-shell .yw-success-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 3rem;
+    margin: 2rem auto;
+    max-width: 900px;
+    border: 1px solid #eee;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.yw-shell .yw-success-actions {
+    display: flex;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+.yw-shell .yw-success-actions .yw-btn,
+.yw-shell .yw-success-actions sulu-link {
+    width: auto !important;
+    display: inline-flex !important;
+    min-width: 200px;
+}
+
+.yw-shell .yw-summary-badge {
+    display: inline-block;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    margin: 0.25rem;
+    font-size: 0.875rem;
+}
+
+/* ===== Summary / confirmation ===== */
+.yw-shell .yw-summary-body{
+    margin-top: 24px;
+    display: grid;
+    gap: 18px;
+}
+
+/* “Card” per blok */
+.yw-shell .yw-summary-section{
+    border: 1px solid var(--yw-border);
+    border-radius: var(--yw-radius-lg);
+    background: #fff;
+    padding: 16px;
+}
+
+/* Details list */
+.yw-shell .yw-summary-list{
+    margin: 0;
+}
+
+.yw-shell .yw-summary-row{
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 16px;
+    align-items: baseline;
+    padding: 10px 0;
+    border-top: 1px solid rgba(226,232,240,.8);
+}
+
+.yw-shell .yw-summary-row:first-child{
+    border-top: 0;
+    padding-top: 0;
+}
+
+.yw-shell .yw-summary-row dt{
+    margin: 0;
+    font-weight: 700;
+    color: var(--yw-text);
+}
+
+.yw-shell .yw-summary-row dd{
+    margin: 0;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: var(--yw-text);
+}
+
+/* Group titles */
+.yw-shell .yw-summary-group-title{
+    margin: 0 0 12px;
+    font-size: 16px;
+    font-weight: 900;
+    color: var(--yw-text);
+}
+
+/* Per item (e.g. “#1”) */
+.yw-shell .yw-summary-item{
+    padding-top: 12px;
+    margin-top: 12px;
+    border-top: 1px solid rgba(226,232,240,.8);
+}
+
+.yw-shell .yw-summary-item:first-of-type{
+    border-top: 0;
+    margin-top: 0;
+    padding-top: 0;
+}
+
+.yw-shell .yw-summary-item-label{
+    margin: 0 0 10px;
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--yw-text);
+}
+
+.yw-shell .yw-summary-item-details{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* Badge (je had al iets; dit maakt ’m rustiger) */
+.yw-shell .yw-summary-badge{
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--yw-text);
+}
+
+/* Optional: highlight paid add-ons */
+.yw-shell .yw-summary-badge strong{
+    font-weight: 900;
+}
+
+/* Make currency additions stand out a bit */
+.yw-shell .yw-summary-badge .yw-summary-price{
+    color: var(--yw-muted);
+    font-weight: 800;
+}

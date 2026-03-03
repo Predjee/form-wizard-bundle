@@ -1,0 +1,190 @@
+{% use "form_div_layout.html.twig" %}
+{% trans_default_domain 'yiggle_form_wizard' %}
+
+{% block form_row %}
+    {% if form.vars.compound %}
+        {% for child in form %}
+            {{ form_row(child) }}
+        {% endfor %}
+
+        {% if isRowAction is not defined or not isRowAction %}
+            {{ form_errors(form) }}
+        {% endif %}
+    {% else %}
+        {% set col = form.vars.row_attr['data-yw-width']
+            ?? form.vars.attr['data-yw-width']
+            ?? 12
+        %}
+
+        {% set describedby = [] %}
+        {% if form.vars.help %}
+            {% set describedby = describedby|merge([form.vars.id ~ '_help']) %}
+        {% endif %}
+        {% if form.vars.errors|length > 0 %}
+            {% for e in form.vars.errors %}
+                {% set describedby = describedby|merge([form.vars.id ~ '_error' ~ loop.index]) %}
+            {% endfor %}
+        {% endif %}
+
+        {% set widget_attr = {} %}
+        {% if describedby|length > 0 %}
+            {% set widget_attr = widget_attr|merge({'aria-describedby': describedby|join(' ')}) %}
+        {% endif %}
+        {% if form.vars.errors|length > 0 %}
+            {% set widget_attr = widget_attr|merge({'aria-invalid': 'true'}) %}
+        {% endif %}
+
+        <div class="yw-field" style="--yw-col: {{ col }};">
+            {{ form_label(form) }}
+
+            <div class="yw-control">
+                {{ form_widget(form, { attr: widget_attr }) }}
+            </div>
+
+            {% if isRowAction is not defined or not isRowAction %}
+                {{ form_errors(form) }}
+                {{ form_help(form) }}
+            {% endif %}
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block form_label %}
+    {% if label is not same as(false) %}
+        {% set label_attr = label_attr|merge({
+            class: (label_attr.class|default('') ~ ' yw-label')|trim
+        }) %}
+
+        {% if not compound %}
+            {% set label_attr = label_attr|merge({ for: id }) %}
+        {% endif %}
+
+        <label{% with {attr: label_attr} %}{{ block('attributes') }}{% endwith %}>
+            {{ label|trans(label_translation_parameters, translation_domain) }}
+
+            {% if required %}
+                <span class="yw-required" aria-hidden="true">*</span>
+            {% endif %}
+        </label>
+    {% endif %}
+{% endblock %}
+
+{% block form_widget_simple %}
+    {% set attr = attr|merge({
+        class: (attr.class|default('') ~ ' yw-input')|trim
+    }) %}
+    {{ parent() }}
+{% endblock %}
+
+{% block textarea_widget %}
+    {% set attr = attr|merge({
+        class: (attr.class|default('') ~ ' yw-input')|trim,
+        rows: attr.rows|default(3)
+    }) %}
+    {{ parent() }}
+{% endblock %}
+
+{% block choice_widget_collapsed %}
+    {% set attr = attr|merge({ class: (attr.class|default('') ~ ' yw-input')|trim }) %}
+    {{ parent() }}
+{% endblock %}
+
+{% block checkbox_row %}
+    <div class="yw-field" style="--yw-col: 12;">
+        <div class="yw-checkbox-card">
+            {{ form_widget(form) }}
+            <label class="yw-checkbox-label" for="{{ form.vars.id }}">
+                {{ form.vars.label|trans({}, form.vars.translation_domain ?? 'yiggle_form_wizard') }}
+            </label>
+        </div>
+        {{ form_errors(form) }}
+        {{ form_help(form) }}
+    </div>
+{% endblock %}
+
+{% block form_help %}
+    {% if help %}
+        {% set help_attr = help_attr|merge({
+            class: (help_attr.class|default('') ~ ' yw-help')|trim
+        }) %}
+        {{ parent() }}
+    {% endif %}
+{% endblock %}
+
+{% block form_errors %}
+    {% if errors|length > 0 %}
+        <ul class="yw-errors">
+            {% for error in errors %}
+                <li id="{{ id ~ '_error' ~ loop.index }}" class="yw-error">{{ error.message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+{% endblock %}
+
+{% block wizard_repeatable_group_row %}
+    {% trans_default_domain 'yiggle_form_wizard' %}
+    {% set config = form.vars.fields_config ?? {} %}
+
+    {% set col = form.vars.row_attr['data-yw-width']
+        ?? form.vars.attr['data-yw-width']
+        ?? 12
+    %}
+
+    <div class="yw-field yw-repeatable-field" style="--yw-col: {{ col }};">
+        {% if form.vars.label %}
+            <div class="yw-label">
+                {{ form.vars.label|trans({}, form.vars.translation_domain ?? 'yiggle_form_wizard') }}
+            </div>
+        {% endif %}
+
+        {{ form_help(form) }}
+
+        <div class="yw-control">
+            <turbo-frame id="frame_{{ form.vars.id }}" class="yw-repeatable-group">
+                <div class="yw-repeatable-container">
+                    {% for child in form %}
+                        {% if child.vars.name matches '/^\\d+$/' %}
+                            <div class="yw-repeatable-row">
+                                <header class="yw-repeatable-row-head">
+                                    <div class="yw-repeatable-row-title">
+                                        {{ (config.addLabel|default('yiggle_form_wizard.wizard.row_label'))|trans }} {{ loop.index0 }}
+                                    </div>
+
+                                    <div class="yw-repeatable-row-actions">
+                                        {{ form_widget(child.remove_row, {
+                                            isRowAction: true,
+                                            attr: {
+                                                'data-turbo-frame': 'frame_' ~ form.vars.id,
+                                                'formnovalidate': 'formnovalidate'
+                                            }
+                                        }) }}
+                                    </div>
+                                </header>
+
+                                <div class="yw-field-grid" role="group">
+                                    {% for field in child %}
+                                        {% if field.vars.name != 'remove_row' %}
+                                            {{ form_row(field) }}
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+
+                <div class="yw-repeatable-actions">
+                    {{ form_widget(form.add_row, {
+                        isRowAction: true,
+                        attr: {
+                            'data-turbo-frame': 'frame_' ~ form.vars.id,
+                            'formnovalidate': 'formnovalidate'
+                        }
+                    }) }}
+                </div>
+            </turbo-frame>
+        </div>
+
+        {{ form_errors(form) }}
+    </div>
+{% endblock %}

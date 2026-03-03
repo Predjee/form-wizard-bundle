@@ -1,0 +1,25 @@
+{# @YiggleFormWizard/components/wizard/_actions.html.twig #}
+{% trans_default_domain 'yiggle_form_wizard' %}
+
+<footer class="yw-actions">
+    <div class="yw-actions-left">
+        {% if form.navigator.back is defined %}
+            {{ form_widget(form.navigator.back, { attr: { class: 'yw-btn yw-btn-secondary' } }) }}
+        {% endif %}
+    </div>
+
+    <div class="yw-actions-right">
+        {% if form.navigator.next is defined %}
+            {{ form_widget(form.navigator.next, { attr: { class: 'yw-btn yw-btn-primary' } }) }}
+        {% endif %}
+        {% if form.navigator.finish is defined %}
+            {{ form_widget(form.navigator.finish, { attr: { class: 'yw-btn yw-btn-primary' } }) }}
+        {% endif %}
+    </div>
+</footer>
+
+{% if form.navigator.reset is defined %}
+    <div class="yw-reset-wrapper">
+        {{ form_widget(form.navigator.reset, { attr: { class: 'yw-btn-link-muted' } }) }}
+    </div>
+{% endif %}

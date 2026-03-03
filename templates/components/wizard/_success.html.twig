@@ -1,0 +1,34 @@
+{% trans_default_domain 'yiggle_form_wizard' %}
+
+<div class="yw-success">
+    <div class="yw-success-card">
+        {% if wizard.successText %}
+        <h2 class="yw-success-title">{{ wizard.successTitle }}</h2>
+        {% endif %}
+
+        {% if wizard.successText %}
+        <div class="yw-success-text">
+            {{ wizard.successText|raw }}
+        </div>
+        {% endif %}
+
+        {% if wizard.showSummary and receipt is defined and receipt is not null and receipt.getTotalCents > 0 %}
+            <div class="yw-success-summary">
+                <h3 class="yw-summary-group-title">{{ 'yiggle_form_wizard.wizard.summary.details_title'|trans }}</h3>
+
+                {% include '@YiggleFormWizard/components/wizard/_summary_details.html.twig' with { receipt: receipt } %}
+            </div>
+        {% endif %}
+
+        {% if wizard.successLink.href|default(null) %}
+            <div class="yw-success-actions">
+                <sulu-link
+                    data-turbo-frame="_top"
+                    class="yw-btn yw-btn-primary"
+                    href="{{ wizard.successLink.href }}"
+                    type="button"
+                />
+            </div>
+        {% endif %}
+    </div>
+</div>

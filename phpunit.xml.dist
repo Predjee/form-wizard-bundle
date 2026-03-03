@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="tests/bootstrap.php"
+         colors="true"
+         failOnRisky="true"
+         failOnWarning="true"
+         beStrictAboutOutputDuringTests="true"
+>
+    <php>
+        <env name="KERNEL_CLASS" value="Yiggle\FormWizardBundle\Tests\Kernel\MinimalTestKernel" />
+        <env name="APP_ENV" value="test"/>
+        <env name="APP_DEBUG" value="0" />
+        <env name="SHELL_VERBOSITY" value="-1"/>
+        <env name="SYMFONY_DEPRECATIONS_HELPER" value="max[self]=0"/>
+        <env name="YIGGLE_FW_DISABLE_SULU" value="1"/>
+    </php>
+
+    <testsuites>
+        <testsuite name="YiggleFormWizardBundle Test Suite">
+            <directory>tests</directory>
+        </testsuite>
+    </testsuites>
+</phpunit>

@@ -1,0 +1,9 @@
+* text=auto eol=lf
+
+/.idea export-ignore
+/.vscode export-ignore
+/var export-ignore
+/vendor export-ignore
+/.phpunit.result.cache export-ignore
+/.DS_Store export-ignore
+/__MACOSX export-ignore

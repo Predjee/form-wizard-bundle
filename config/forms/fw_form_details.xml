@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<form xmlns="http://schemas.sulu.io/template/template"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://schemas.sulu.io/template/template http://schemas.sulu.io/template/form-1.0.xsd">
+    <key>fw_form_details</key>
+    <properties>
+        <section name="general">
+            <properties>
+                <property name="title" type="text_line" mandatory="true" colspan="8">
+                    <meta>
+                        <title>yiggle_form_wizard.admin.title</title>
+                    </meta>
+                </property>
+                <property name="enabled" type="checkbox" colspan="4">
+                    <meta>
+                        <title>yiggle_form_wizard.admin.enabled</title>
+                    </meta>
+                </property>
+            </properties>
+        </section>
+        <section name="display_settings">
+            <meta>
+                <title>yiggle_form_wizard.admin.display_settings</title>
+            </meta>
+            <properties>
+                <property name="showSummary" type="checkbox" colspan="6">
+                    <meta>
+                        <title>yiggle_form_wizard.admin.show_summary</title>
+                        <info_text>yiggle_form_wizard.admin.show_summary_final_step</info_text>
+                    </meta>
+                </property>
+                <property name="showReceipt" type="checkbox" colspan="6">
+                    <meta>
+                        <title>yiggle_form_wizard.admin.show_receipt</title>
+                    </meta>
+                </property>
+            </properties>
+        </section>
+        <section name="website">
+            <meta>
+                <title>yiggle_form_wizard.admin.website_configuration</title>
+            </meta>
+            <properties>
+                <property name="submitLabel" type="text_line" colspan="4">
+                    <meta>
+                        <title>yiggle_form_wizard.admin.submit_label</title>
+                    </meta>
+                </property>
+                <property name="renderVariant" type="single_select" colspan="4">
+                    <meta>
+                        <title>yiggle_form_wizard.admin.render_variant</title>
+                    </meta>
+                    <params>
+                        <param name="values" type="expression" value="service('Yiggle\\FormWizardBundle\\Infrastructure\\Sulu\\Admin\\Provider\\RenderVariantProviderValuesProvider').getValues()"/>
+                    </params>
+                </property>
+                <property name="paymentMode" type="single_select" mandatory="true" colspan="4">
+                    <meta>
+                        <title>yiggle_form_wizard.admin.payment_mode</title>
+                    </meta>
+                    <params>
+                        <param name="default_value" value="none"/>
+                        <param name="values" type="collection">
+                            <param name="none">
+                                <meta>
+                                    <title>yiggle_form_wizard.choices.none</title>
+                                </meta>
+                            </param>
+                            <param name="required">
+                                <meta>
+                                    <title>yiggle_form_wizard.choices.required</title>
+                                </meta>
+                            </param>
+                        </param>
+                    </params>
+                </property>
+                <property name="paymentProvider" type="single_select" visibleCondition='paymentMode != "none"' colspan="6">
+                    <meta>
+                        <title>yiggle_form_wizard.admin.payment_mode</title>
+                    </meta>
+                    <params>
+                        <param name="values" type="expression" value="service('Yiggle\\FormWizardBundle\\Infrastructure\\Sulu\\Admin\\Provider\\PaymentProviderValuesProvider').getValues()"/>
+                    </params>
+                </property>
+
+                <property
+                    name="fixedAmount"
+                    type="number"
+                    colspan="6"
+                    visibleCondition='paymentMode != "none"'
+                >
+                    <meta>
+                        <title>yiggle_form_wizard.admin.fixed_amount</title>
+                    </meta>
+                </property>
+
+                <property name="successTitle" type="text_line">
+                    <meta>
+                        <title>yiggle_form_wizard.admin.success_title</title>
+                    </meta>
+                </property>
+                <property name="successText" type="text_editor">
+                    <meta>
+                        <title>yiggle_form_wizard.admin.success_text</title>
+                    </meta>
+                    <params>
+                        <param name="enable_all" value="true"/>
+                    </params>
+                </property>
+                <property name="successLink" type="link">
+                    <meta>
+                        <title>yiggle_form_wizard.admin.success_link</title>
+                    </meta>
+                </property>
+            </properties>
+        </section>
+    </properties>
+</form>

@@ -1,0 +1,3 @@
+fw_admin_api:
+  resource: "@YiggleFormWizardBundle/src/Infrastructure/Sulu/Admin/Controller/"
+  type: attribute

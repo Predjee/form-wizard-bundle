@@ -1,0 +1,82 @@
+{% trans_default_domain 'yiggle_form_wizard' %}
+
+<aside class="yw-aside">
+    <div class="yw-aside-card">
+        <div id="wizard-receipt-container">
+            {% include '@YiggleFormWizard/components/wizard/_receipt.html.twig' with { receipt: receipt } only %}
+        </div>
+    </div>
+</aside>
+
+<div class="yw-receipt-mobile">
+    <input type="checkbox" id="yw-receipt-toggle">
+    <label for="yw-receipt-toggle" class="yw-mobile-header">
+        <span class="yw-mobile-total-label">Overzicht</span>
+        <span class="yw-mobile-total-value" id="wizard-receipt-container-mobile">
+            {{ ((receipt.totalInCents ?? 0) / 100)|format_currency('EUR') }}
+        </span>
+    </label>
+
+    <div class="yw-mobile-body">
+        {% set lines = receipt.lines|default([]) %}
+
+        {% set ungrouped = lines|filter(l => l.groupKey is not defined or l.groupKey is null) %}
+        {% for line in ungrouped %}
+            <div class="yw-mobile-line">
+                <span>{{ line.label }}</span>
+                <span>{{ ((line.amountCents ?? 0) / 100)|format_currency('EUR') }}</span>
+            </div>
+
+            {% if line.description %}
+                <div class="yw-mobile-line yw-mobile-line-meta">
+                    <span>{{ line.description }}</span>
+                    <span></span>
+                </div>
+            {% endif %}
+        {% endfor %}
+
+        {% set groupedLines = lines|filter(l => l.groupKey is defined and l.groupKey is not null) %}
+
+        {% if groupedLines|length > 0 %}
+            {% set groups = {} %}
+            {% for line in groupedLines %}
+                {% set gk = line.groupKey %}
+                {% set gt = line.groupTitle ?? gk %}
+                {% set it = line.itemTitle ?? '—' %}
+
+                {% set group = groups[gk]|default({ title: gt, items: {} }) %}
+                {% set items = group.items %}
+                {% set itemLines = items[it]|default([]) %}
+                {% set itemLines = itemLines|merge([line]) %}
+                {% set items = items|merge({ (it): itemLines }) %}
+                {% set groups = groups|merge({ (gk): { title: group.title, items: items } }) %}
+            {% endfor %}
+
+            {% for gk, group in groups %}
+                <div class="yw-mobile-group-title">
+                    {{ group.title }}
+                </div>
+
+                {% for itemTitle, itemLines in group.items %}
+                    <div class="yw-mobile-item-title">
+                        {{ itemTitle }}
+                    </div>
+
+                    {% for line in itemLines %}
+                        <div class="yw-mobile-line">
+                            <span>{{ line.label }}</span>
+                            <span>{{ ((line.amountCents ?? 0) / 100)|format_currency('EUR') }}</span>
+                        </div>
+
+                        {% if line.description %}
+                            <div class="yw-mobile-line yw-mobile-line-meta">
+                                <span>{{ line.description }}</span>
+                                <span></span>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                {% endfor %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>

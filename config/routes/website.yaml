@@ -1,0 +1,3 @@
+fw_website_api:
+  resource: '@YiggleFormWizardBundle/src/Presentation/Web/Controller/'
+  type: attribute

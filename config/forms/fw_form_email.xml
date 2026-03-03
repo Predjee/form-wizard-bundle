@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<form xmlns="http://schemas.sulu.io/template/template"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://schemas.sulu.io/template/template http://schemas.sulu.io/template/form-1.0.xsd">
+    <key>fw_form_email</key>
+    <properties>
+        <section name="settings">
+            <properties>
+                <property name="subject" type="text_line" colspan="12">
+                    <meta>
+                        <title>yiggle_form_wizard.admin.email.subject</title>
+                    </meta>
+                </property>
+                <property name="fromEmail" type="email" colspan="6">
+                    <meta>
+                        <title>yiggle_form_wizard.admin.email.from_email</title>
+                    </meta>
+                </property>
+                <property name="fromName" type="text_line" colspan="6">
+                    <meta>
+                        <title>yiggle_form_wizard.admin.email.from_name</title>
+                    </meta>
+                </property>
+                <property name="customerEmailToField" type="single_select" colspan="6">
+                    <meta>
+                        <title>yiggle_form_wizard.admin.email.customer_email_field</title>
+                    </meta>
+                    <params>
+                        <param name="values" type="expression"
+                               value="service('Yiggle\\FormWizardBundle\\Infrastructure\\Sulu\\Admin\\Provider\\EmailFieldProvider').getValues()"/>
+                    </params>
+                </property>
+            </properties>
+        </section>
+        <section name="mail">
+            <properties>
+                <property name="mailTextAdmin" type="text_editor">
+                    <meta>
+                        <title>yiggle_form_wizard.admin.email.admin_email_text</title>
+                    </meta>
+                </property>
+                <property name="mailTextCustomer" type="text_editor">
+                    <meta>
+                        <title>yiggle_form_wizard.admin.email.customer_email_text</title>
+                    </meta>
+                </property>
+            </properties>
+        </section>
+
+        <section name="notifications">
+            <properties>
+                <property name="disableAdminMails" type="checkbox" colspan="4">
+                    <meta>
+                        <title>yiggle_form_wizard.admin.email.disable_admin</title>
+                    </meta>
+                </property>
+                <property name="disableCustomerMails" type="checkbox" colspan="4">
+                    <meta>
+                        <title>yiggle_form_wizard.admin.email.disable_customer</title>
+                    </meta>
+                </property>
+                <property name="includeFormCopyInCustomerMail" type="checkbox" colspan="4">
+                    <meta>
+                        <title>yiggle_form_wizard.admin.email.include_copy</title>
+                    </meta>
+                </property>
+            </properties>
+        </section>
+
+        <property name="receivers" type="block" default-type="receiver">
+            <meta>
+                <title>yiggle_form_wizard.admin.email.receivers</title>
+            </meta>
+            <types>
+                <type name="receiver">
+                    <properties>
+                        <property name="receiverType" type="single_select" mandatory="true" colspan="4">
+                            <meta>
+                                <title>yiggle_form_wizard.admin.email.receiver_type</title>
+                            </meta>
+                            <params>
+                                <param name="values" type="collection">
+                                    <param name="to">
+                                        <meta>
+                                            <title>yiggle_form_wizard.admin.choices.to</title>
+                                        </meta>
+                                    </param>
+                                    <param name="cc">
+                                        <meta>
+                                            <title>yiggle_form_wizard.admin.choices.cc</title>
+                                        </meta>
+                                    </param>
+                                    <param name="bcc">
+                                        <meta>
+                                            <title>yiggle_form_wizard.admin.choices.bcc</title>
+                                        </meta>
+                                    </param>
+                                </param>
+                            </params>
+                        </property>
+                        <property name="email" type="email" mandatory="true" colspan="4">
+                            <meta>
+                                <title>yiggle_form_wizard.admin.email.receiver_email</title>
+                            </meta>
+                        </property>
+                        <property name="name" type="text_line" colspan="4">
+                            <meta>
+                                <title>yiggle_form_wizard.admin.email.receiver_name</title>
+                            </meta>
+                        </property>
+                    </properties>
+                </type>
+            </types>
+        </property>
+    </properties>
+</form>

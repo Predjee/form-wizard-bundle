@@ -1,0 +1,15 @@
+<turbo-stream action="replace" target="wizard-receipt-container">
+    <template>
+        <div id="wizard-receipt-container" class="yw-receipt">
+            {% include '@YiggleFormWizard/components/wizard/_receipt.html.twig' %}
+        </div>
+    </template>
+</turbo-stream>
+
+<turbo-stream action="replace" target="wizard-receipt-container-mobile">
+    <template>
+        <div id="wizard-receipt-container-mobile">
+            <span>{{ ((receipt.totalInCents ?? 0) / 100)|format_currency('EUR') }}</span>
+        </div>
+    </template>
+</turbo-stream>

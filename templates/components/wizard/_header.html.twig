@@ -1,0 +1,39 @@
+{% trans_default_domain 'yiggle_form_wizard' %}
+
+<header class="yw-header">
+    <div class="yw-header-top">
+        <div class="yw-progress">
+            <div class="yw-progress-track">
+                <div class="yw-progress-fill" style="width: {{ (stepIndex + 1) / stepCount * 100 }}%"></div>
+            </div>
+            <span class="yw-progress-meta">
+                {{ stepIndex + 1 }} / {{ stepCount }}
+            </span>
+        </div>
+    </div>
+
+    <ol class="yw-stepper">
+        {% for name, s in stepsView %}
+            {% set stepLoopIndex = loop.index0 %}
+            {% set isCurrent = stepLoopIndex == stepIndex %}
+            {% set isDone = stepLoopIndex < stepIndex %}
+            {% set currentStep = wizard.steps[loop.index0]|default(null) %}
+
+            <li class="yw-stepper-item {{ isCurrent ? 'is-current' : '' }} {{ isDone ? 'is-done' : '' }}">
+                <span class="yw-stepper-dot">
+                    {% if isDone %}
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    {% else %}
+                        {{ loop.index }}
+                    {% endif %}
+                </span>
+
+                <span class="yw-stepper-label">
+                    {{ currentStep.title|default }}
+                </span>
+            </li>
+        {% endfor %}
+    </ol>
+</header>

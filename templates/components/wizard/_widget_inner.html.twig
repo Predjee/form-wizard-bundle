@@ -1,0 +1,36 @@
+{% trans_default_domain 'yiggle_form_wizard' %}
+
+<div class="yw-shell">
+    {% if isCompleted %}
+        {% include '@YiggleFormWizard/components/wizard/_success.html.twig' with {
+            wizard: wizard,
+            wizardId: wizardId,
+            receipt: receipt
+        } only %}
+
+    {% else %}
+
+        {% form_theme form '@YiggleFormWizard/form/wizard_theme.html.twig' %}
+
+        {% set cursor     = form.vars.cursor|default(null) %}
+        {% set stepIndex  = cursor ? cursor.stepIndex : 0 %}
+        {% set stepsView  = form.vars.visible_steps|default({}) %}
+        {% set stepCount  = stepsView|length ?: 1 %}
+        {% set currentStepEntity = wizard.steps[stepIndex]|default(null) %}
+        {% set variantTemplate = variantTemplate|default('@YiggleFormWizard/components/wizard/variants/minimal.html.twig') %}
+        {% set showReceipt = showReceipt|default(false) %}
+
+        {% include variantTemplate with {
+            wizard: wizard,
+            wizardId: wizardId,
+            form: form,
+            receipt: receipt,
+            stepIndex: stepIndex,
+            stepCount: stepCount,
+            stepsView: stepsView,
+            currentStepEntity: currentStepEntity,
+            showReceipt: showReceipt
+        } only %}
+
+    {% endif %}
+</div>

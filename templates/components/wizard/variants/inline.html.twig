@@ -1,0 +1,42 @@
+<div class="yw-inline">
+    {{ form_start(form) }}
+    {% if stepCount > 1 %}
+        {% include '@YiggleFormWizard/components/wizard/_header.html.twig' with {
+            wizard: wizard,
+            stepIndex: stepIndex,
+            stepCount: stepCount,
+            stepsView: stepsView,
+            currentStepEntity: currentStepEntity
+        } only %}
+    {% endif %}
+
+    <div class="yw-inline__body">
+        {% if form is not null %}
+            {% include '@YiggleFormWizard/components/wizard/_fields.html.twig' with {
+                form: form,
+                wizard: wizard,
+                stepIndex: stepIndex
+            } only %}
+
+            {% if showReceipt %}
+                <div class="yw-inline__receipt">
+                    {% include '@YiggleFormWizard/components/wizard/_sidebar.html.twig' with {
+                        receipt: receipt,
+                        currency: wizard.currency ?? 'EUR'
+                    } only %}
+                </div>
+            {% endif %}
+
+            <div class="yw-inline__actions">
+                {% include '@YiggleFormWizard/components/wizard/_actions.html.twig' with {
+                    form: form,
+                    wizard: wizard,
+                    stepIndex: stepIndex,
+                    stepCount: stepCount
+                } only %}
+            </div>
+        {% endif %}
+    </div>
+    <div style="display:none">{{ form_rest(form) }}</div>
+    {{ form_end(form) }}
+</div>
