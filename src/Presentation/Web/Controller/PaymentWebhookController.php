@@ -19,7 +19,7 @@ final class PaymentWebhookController extends AbstractController
     ) {
     }
 
-    #[Route('/wizard/webhook/{provider}', name: 'fw_wizard_payment_webhook', methods: ['GET', 'POST'])]
+    #[Route('/wizard/webhook/{provider}', name: 'fw_wizard_payment_webhook', methods: ['POST'])]
     public function __invoke(Request $request, string $provider): Response
     {
         $transactionId = (string) ($request->request->get('id') ?? $request->query->get('id') ?? '');

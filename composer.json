@@ -1,7 +1,7 @@
 {
   "name": "yiggle/form-wizard-bundle",
   "type": "symfony-bundle",
-  "description": "Sulu 3 Form Wizard routing via Sulu Route + RoutableInterface",
+  "description": "Sulu 3 Form Wizard",
   "license": "MIT",
   "autoload": {
     "psr-4": {
