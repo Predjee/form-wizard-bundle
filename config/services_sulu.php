@@ -44,5 +44,6 @@ return static function (ContainerConfigurator $container): void {
     $services->set(WizardContentController::class)
         ->autowire()
         ->autoconfigure()
-        ->public();
+        ->public()
+        ->tag('controller.service_arguments');
 };
