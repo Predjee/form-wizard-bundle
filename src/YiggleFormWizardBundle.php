@@ -144,7 +144,7 @@ final class YiggleFormWizardBundle extends AbstractBundle
                 'mappings' => [
                     'YiggleFormWizardBundle' => [
                         'is_bundle' => false,
-                        'type' => 'annotation',
+                        'type' => 'attribute',
                         'dir' => $this->getPath() . '/src/Domain/Entity',
                         'prefix' => 'Yiggle\FormWizardBundle\Domain\Entity',
                         'alias' => 'YiggleFormWizard',
