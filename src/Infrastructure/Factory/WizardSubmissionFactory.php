@@ -6,7 +6,7 @@ namespace Yiggle\FormWizardBundle\Infrastructure\Factory;
 
 use Yiggle\FormWizardBundle\Domain\Contract\Factory\WizardSubmissionFactoryInterface;
 use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardSubmissionInterface;
-use Yiggle\FormWizardBundle\Entity\WizardSubmission;
+use Yiggle\FormWizardBundle\Domain\Entity\WizardSubmission;
 
 class WizardSubmissionFactory implements WizardSubmissionFactoryInterface
 {

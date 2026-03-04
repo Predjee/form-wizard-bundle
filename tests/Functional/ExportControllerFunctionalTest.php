@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Yiggle\FormWizardBundle\Tests\Functional;
 
 use Symfony\Component\HttpFoundation\Response;
-use Yiggle\FormWizardBundle\Entity\WizardForm;
+use Yiggle\FormWizardBundle\Domain\Entity\WizardForm;
 
 final class ExportControllerFunctionalTest extends FunctionalTestCase
 {

@@ -8,8 +8,8 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Yiggle\FormWizardBundle\Application\Export\SubmissionCsvExporter;
-use Yiggle\FormWizardBundle\Entity\WizardForm;
-use Yiggle\FormWizardBundle\Entity\WizardSubmission;
+use Yiggle\FormWizardBundle\Domain\Entity\WizardForm;
+use Yiggle\FormWizardBundle\Domain\Entity\WizardSubmission;
 
 #[Route(
     path: '/_test/fw/forms/{id}/submissions.csv',

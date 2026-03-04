@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Yiggle\FormWizardBundle\Entity;
+namespace Yiggle\FormWizardBundle\Domain\Entity;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -20,10 +20,7 @@ class WizardStep implements WizardStepInterface
     #[ORM\Column(type: 'string', length: 36)]
     private string $uuid;
 
-    /**
-     * @var WizardFormInterface&WizardForm
-     */
-    #[ORM\ManyToOne(targetEntity: WizardForm::class, inversedBy: 'steps')]
+    #[ORM\ManyToOne(targetEntity: WizardFormInterface::class, inversedBy: 'steps')] // Interface!
     #[ORM\JoinColumn(name: 'form_uuid', referencedColumnName: 'uuid', nullable: false, onDelete: 'CASCADE')]
     private WizardFormInterface $form;
 
@@ -34,9 +31,9 @@ class WizardStep implements WizardStepInterface
     private int $position = 0;
 
     /**
-     * @var Collection<int, WizardStepFieldInterface&WizardStepField>
+     * @var Collection<int, WizardStepFieldInterface>
      */
-    #[ORM\OneToMany(targetEntity: WizardStepField::class, mappedBy: 'step', cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[ORM\OneToMany(targetEntity: WizardStepFieldInterface::class, mappedBy: 'step', cascade: ['persist', 'remove'], orphanRemoval: true)] // Interface!
     #[ORM\OrderBy([
         'position' => 'ASC',
     ])]

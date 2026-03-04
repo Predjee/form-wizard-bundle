@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Yiggle\FormWizardBundle\Entity;
+namespace Yiggle\FormWizardBundle\Domain\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
@@ -19,10 +19,7 @@ class WizardSubmission implements WizardSubmissionInterface
     #[ORM\Column(type: 'string', length: 36)]
     private string $uuid;
 
-    /**
-     * @var WizardFormInterface&WizardForm
-     */
-    #[ORM\ManyToOne(targetEntity: WizardForm::class, inversedBy: 'submissions')]
+    #[ORM\ManyToOne(targetEntity: WizardFormInterface::class, inversedBy: 'submissions')]
     #[ORM\JoinColumn(name: 'form_uuid', referencedColumnName: 'uuid', nullable: false, onDelete: 'CASCADE')]
     private WizardFormInterface $form;
 
@@ -74,10 +71,6 @@ class WizardSubmission implements WizardSubmissionInterface
 
     public function setForm(WizardFormInterface $form): static
     {
-        if (! $form instanceof WizardForm) {
-            throw new \InvalidArgumentException(sprintf('Expected %s, got %s.', WizardForm::class, $form::class));
-        }
-
         $this->form = $form;
 
         return $this;

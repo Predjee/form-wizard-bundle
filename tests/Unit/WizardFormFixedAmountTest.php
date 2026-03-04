@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Yiggle\FormWizardBundle\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
-use Yiggle\FormWizardBundle\Entity\WizardForm;
+use Yiggle\FormWizardBundle\Domain\Entity\WizardForm;
 
 final class WizardFormFixedAmountTest extends TestCase
 {

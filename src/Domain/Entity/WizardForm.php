@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Yiggle\FormWizardBundle\Entity;
+namespace Yiggle\FormWizardBundle\Domain\Entity;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -95,18 +95,18 @@ class WizardForm implements WizardFormInterface
     private ?string $fixedAmount = null;
 
     /**
-     * @var Collection<int, WizardStepInterface&WizardStep>
+     * @var Collection<int, WizardStepInterface>
      */
-    #[ORM\OneToMany(targetEntity: WizardStep::class, mappedBy: 'form', cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[ORM\OneToMany(targetEntity: WizardStepInterface::class, mappedBy: 'form', cascade: ['persist', 'remove'], orphanRemoval: true)]
     #[ORM\OrderBy([
         'position' => 'ASC',
     ])]
     private Collection $steps;
 
     /**
-     * @var Collection<int, WizardSubmissionInterface&WizardSubmission>
+     * @var Collection<int, WizardSubmissionInterface>
      */
-    #[ORM\OneToMany(targetEntity: WizardSubmission::class, mappedBy: 'form', cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[ORM\OneToMany(targetEntity: WizardSubmissionInterface::class, mappedBy: 'form', cascade: ['persist', 'remove'], orphanRemoval: true)]
     #[ORM\OrderBy([
         'createdAt' => 'DESC',
     ])]
@@ -399,7 +399,7 @@ class WizardForm implements WizardFormInterface
     }
 
     /**
-     * @return Collection<int, WizardStepInterface&WizardStep>
+     * @return Collection<int, WizardStepInterface>
      */
     public function getSteps(): Collection
     {
@@ -458,7 +458,7 @@ class WizardForm implements WizardFormInterface
     }
 
     /**
-     * @return Collection<int, WizardSubmissionInterface&WizardSubmission>
+     * @return Collection<int, WizardSubmissionInterface>
      */
     public function getSubmissions(): Collection
     {

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Yiggle\FormWizardBundle\Entity;
+namespace Yiggle\FormWizardBundle\Domain\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;

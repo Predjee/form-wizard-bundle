@@ -29,7 +29,7 @@ return static function (ECSConfig $ecsConfig): void {
         __DIR__ . '/var',
         __DIR__ . '/vendor',
         MethodChainingIndentationFixer::class => [
-            __DIR__ . '/src/DependencyInjection/*Configuration.php',
+            __DIR__ . '/src/YiggleFormWizardBundle.php',
         ],
     ]);
 };

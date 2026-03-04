@@ -1,9 +1,13 @@
 {
   "controllers": {
-    "receipt-trigger": {
-      "main": "assets/controllers/receipt_trigger_controller.js",
-      "fetch": "eager",
-      "enabled": true
+    "@yiggle/form-wizard-bundle": {
+      "receipt-trigger": {
+        "enabled": false,
+        "fetch": "eager",
+        "autoimport": {
+          "assets/css/wizard.css": true
+        }
+      }
     }
   },
   "entrypoints": []

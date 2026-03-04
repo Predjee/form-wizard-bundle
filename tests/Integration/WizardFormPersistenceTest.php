@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Yiggle\FormWizardBundle\Tests\Integration;
 
-use Yiggle\FormWizardBundle\Entity\WizardForm;
+use Yiggle\FormWizardBundle\Domain\Entity\WizardForm;
 
 final class WizardFormPersistenceTest extends IntegrationTestCase
 {

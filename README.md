@@ -43,6 +43,43 @@ php bin/console doctrine:migrations:diff
 php bin/console doctrine:migrations:migrate
 ```
 
+### Frontend assets
+
+The bundle ships a CSS stylesheet and an optional Stimulus controller for multi-step AJAX UX.
+
+#### CSS
+
+Add the stylesheet to your Twig template:
+
+```twig
+{{ asset('yiggle/form-wizard-bundle/wizard.css') }}
+```
+
+#### Stimulus controller (optional)
+
+Requires `symfony/stimulus-bundle` and `symfony/ux-turbo`:
+
+```bash
+composer require symfony/stimulus-bundle symfony/ux-turbo
+npm install
+```
+
+Enable the controller in your project's `assets/controllers.json`:
+
+```json
+{
+    "controllers": {
+        "@yiggle/form-wizard-bundle": {
+            "receipt-trigger": {
+                "enabled": true
+            }
+        }
+    }
+}
+```
+
+The controller is disabled by default — enable it only when using the multi-step AJAX UX with Turbo frames.
+
 ## Configuration
 
 ```yaml

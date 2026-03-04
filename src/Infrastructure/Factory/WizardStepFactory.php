@@ -6,7 +6,7 @@ namespace Yiggle\FormWizardBundle\Infrastructure\Factory;
 
 use Yiggle\FormWizardBundle\Domain\Contract\Factory\WizardStepFactoryInterface;
 use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardStepInterface;
-use Yiggle\FormWizardBundle\Entity\WizardStep;
+use Yiggle\FormWizardBundle\Domain\Entity\WizardStep;
 
 final class WizardStepFactory implements WizardStepFactoryInterface
 {

@@ -1,11 +1,15 @@
 {
-  "name": "yiggle-form-wizard-bundle",
-  "version": "1.0.0",
-  "main": "assets/admin/index.js",
-  "peerDependencies": {
-    "@hotwired/stimulus": "^3.0.0"
-  },
+  "name": "@yiggle/form-wizard-bundle",
+  "version": "0.1.0",
   "symfony": {
-    "controllers": "assets/controllers.json"
+    "controllers": "./assets/controllers.json"
+  },
+  "peerDependencies": {
+    "@hotwired/stimulus": "^3.0",
+    "@hotwired/turbo": "^8.0"
+  },
+  "devDependencies": {
+    "@hotwired/stimulus": "^3.0",
+    "@hotwired/turbo": "^8.0"
   }
 }

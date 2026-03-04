@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Yiggle\FormWizardBundle\Entity;
+namespace Yiggle\FormWizardBundle\Domain\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
@@ -44,12 +44,12 @@ class WizardStepField implements WizardStepFieldInterface
     private ?string $basePrice = null;
 
     public function __construct(
-        #[ORM\ManyToOne(targetEntity: WizardStep::class, inversedBy: 'stepFields')]
+        #[ORM\ManyToOne(targetEntity: WizardStepInterface::class, inversedBy: 'stepFields')]
         #[ORM\JoinColumn(name: 'step_uuid', referencedColumnName: 'uuid', nullable: false, onDelete: 'CASCADE')]
-        private WizardStepInterface $step,
-        #[ORM\OneToOne(targetEntity: WizardField::class)]
+        private readonly WizardStepInterface $step,
+        #[ORM\OneToOne(targetEntity: WizardFieldInterface::class)]
         #[ORM\JoinColumn(name: 'field_uuid', referencedColumnName: 'uuid', nullable: false, onDelete: 'RESTRICT')]
-        private WizardFieldInterface $field,
+        private readonly WizardFieldInterface $field,
         ?string $uuid = null
     ) {
         $this->uuid = $uuid ?: Uuid::v7()->toRfc4122();

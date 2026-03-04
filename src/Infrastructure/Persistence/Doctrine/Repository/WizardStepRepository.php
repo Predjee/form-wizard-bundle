@@ -7,7 +7,7 @@ namespace Yiggle\FormWizardBundle\Infrastructure\Persistence\Doctrine\Repository
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardStepInterface;
-use Yiggle\FormWizardBundle\Entity\WizardStep;
+use Yiggle\FormWizardBundle\Domain\Entity\WizardStep;
 
 /**
  * @extends ServiceEntityRepository<WizardStep>

@@ -7,9 +7,9 @@ namespace Yiggle\FormWizardBundle\Tests\Unit;
 use PHPUnit\Framework\TestCase;
 use Yiggle\FormWizardBundle\Application\Export\SubmissionCsvExporter;
 use Yiggle\FormWizardBundle\Application\Export\SubmissionFlattener;
+use Yiggle\FormWizardBundle\Domain\Entity\WizardForm;
+use Yiggle\FormWizardBundle\Domain\Entity\WizardSubmission;
 use Yiggle\FormWizardBundle\Domain\Payment\PaymentStatus;
-use Yiggle\FormWizardBundle\Entity\WizardForm;
-use Yiggle\FormWizardBundle\Entity\WizardSubmission;
 
 final class SubmissionCsvExporterTest extends TestCase
 {

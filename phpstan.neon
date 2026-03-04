@@ -10,11 +10,6 @@ parameters:
         - vendor/mollie/mollie-api-php/src
 
     ignoreErrors:
-        # Alleen echte doctrine/mapping issues
-        -
-            message: '#Property .* type mapping mismatch#'
-            path: src/Entity/*
-
         # Generics voor controllers zijn vaak overkill, deze mag blijven
         -
             identifier: missingType.generics

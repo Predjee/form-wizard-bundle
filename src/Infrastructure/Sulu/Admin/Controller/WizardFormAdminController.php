@@ -14,7 +14,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
 use Yiggle\FormWizardBundle\Application\DTO\Admin\WizardFormAggregateInput;
-use Yiggle\FormWizardBundle\Entity\WizardForm;
+use Yiggle\FormWizardBundle\Domain\Entity\WizardForm;
 use Yiggle\FormWizardBundle\Infrastructure\Persistence\Doctrine\Repository\WizardFormRepository;
 use Yiggle\FormWizardBundle\Infrastructure\Sulu\Admin\Resource\WizardFormResource;
 use Yiggle\FormWizardBundle\Infrastructure\Sulu\Admin\Service\WizardFormAggregateUpdater;

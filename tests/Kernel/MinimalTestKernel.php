@@ -64,8 +64,9 @@ final class MinimalTestKernel extends Kernel
                     'YiggleFormWizardBundle' => [
                         'is_bundle' => false,
                         'type' => 'attribute',
-                        'dir' => '%kernel.project_dir%/src/Entity',
-                        'prefix' => 'Yiggle\FormWizardBundle\Entity',
+                        'dir' => dirname(__DIR__, 2) . '/src/Domain/Entity',
+                        'prefix' => 'Yiggle\FormWizardBundle\Domain\Entity',
+                        'alias' => 'YiggleFormWizard',
                     ],
                 ],
             ],

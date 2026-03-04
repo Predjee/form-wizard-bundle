@@ -8,7 +8,7 @@ use Yiggle\FormWizardBundle\Domain\Contract\Factory\WizardStepFieldFactoryInterf
 use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardFieldInterface;
 use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardStepFieldInterface;
 use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardStepInterface;
-use Yiggle\FormWizardBundle\Entity\WizardStepField;
+use Yiggle\FormWizardBundle\Domain\Entity\WizardStepField;
 
 final class WizardStepFieldFactory implements WizardStepFieldFactoryInterface
 {

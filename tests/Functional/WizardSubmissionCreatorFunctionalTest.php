@@ -6,9 +6,9 @@ namespace Yiggle\FormWizardBundle\Tests\Functional;
 
 use Yiggle\FormWizardBundle\Application\Data\WizardFlowData;
 use Yiggle\FormWizardBundle\Application\Service\WizardSubmissionCreator;
+use Yiggle\FormWizardBundle\Domain\Entity\WizardForm;
+use Yiggle\FormWizardBundle\Domain\Entity\WizardSubmission;
 use Yiggle\FormWizardBundle\Domain\Payment\PaymentMode;
-use Yiggle\FormWizardBundle\Entity\WizardForm;
-use Yiggle\FormWizardBundle\Entity\WizardSubmission;
 
 final class WizardSubmissionCreatorFunctionalTest extends FunctionalTestCase
 {

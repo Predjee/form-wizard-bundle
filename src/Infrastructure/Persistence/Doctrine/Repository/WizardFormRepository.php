@@ -8,7 +8,7 @@ use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use Yiggle\FormWizardBundle\Application\Contract\WizardFormRepositoryInterface;
 use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardFormInterface;
-use Yiggle\FormWizardBundle\Entity\WizardForm;
+use Yiggle\FormWizardBundle\Domain\Entity\WizardForm;
 
 /**
  * @extends ServiceEntityRepository<WizardForm>

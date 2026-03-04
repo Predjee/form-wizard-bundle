@@ -26,3 +26,4 @@ __MACOSX/
 # Cache
 .cache/
 /tests/Kernel/var/
+composer.lock
