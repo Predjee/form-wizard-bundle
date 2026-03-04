@@ -105,12 +105,12 @@ final class YiggleFormWizardBundle extends AbstractBundle
 
         $container->import('../config/services_core.php');
 
-        if (class_exists(\Mollie\Api\MollieApiClient::class)) {
-            $container->import('../config/services_mollie.php');
+        if (($config['enable_sulu'] ?? true) === true) {
+            $container->import('../config/services_sulu.php');
         }
 
-        if ($config['enable_sulu'] && $builder->hasExtension('sulu_admin')) {
-            $container->import('../config/services_sulu.php');
+        if (class_exists(\Mollie\Api\MollieApiClient::class)) {
+            $container->import('../config/services_mollie.php');
         }
     }
 
