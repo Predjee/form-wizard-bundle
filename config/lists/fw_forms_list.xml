@@ -3,19 +3,19 @@
     <key>fw_forms_list</key>
 
     <properties>
-        <property name="id" translation="yiggle.id">
+        <property name="id" translation="yiggle_form_wizard.admin.id">
             <field-name>uuid</field-name>
-            <entity-name>Yiggle\FormWizardBundle\Entity\WizardForm</entity-name>
+            <entity-name>Yiggle\FormWizardBundle\Domain\Entity\WizardForm</entity-name>
         </property>
 
-        <property name="title" translation="yiggle.title" visibility="yes" searchability="yes">
+        <property name="title" translation="yiggle_form_wizard.admin.title" visibility="yes" searchability="yes">
             <field-name>title</field-name>
-            <entity-name>Yiggle\FormWizardBundle\Entity\WizardForm</entity-name>
+            <entity-name>Yiggle\FormWizardBundle\Domain\Entity\WizardForm</entity-name>
         </property>
 
-        <property name="enabled" translation="yiggle.enabled" visibility="yes" type="bool">
+        <property name="enabled" translation="yiggle_form_wizard.admin.enabled" visibility="yes" type="bool">
             <field-name>enabled</field-name>
-            <entity-name>Yiggle\FormWizardBundle\Entity\WizardForm</entity-name>
+            <entity-name>Yiggle\FormWizardBundle\Domain\Entity\WizardForm</entity-name>
         </property>
     </properties>
 </list>

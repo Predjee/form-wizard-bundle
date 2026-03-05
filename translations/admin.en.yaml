@@ -1,6 +1,8 @@
 yiggle_form_wizard:
   forms: "Form Wizards"
-
+  navigation:
+    forms: "Yiggle Form Wizard"
+    
   tabs:
     steps: "Wizard Steps"
     email: "Email Settings"

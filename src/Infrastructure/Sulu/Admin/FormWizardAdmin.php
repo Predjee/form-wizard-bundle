@@ -31,7 +31,7 @@ final class FormWizardAdmin extends Admin
         }
 
         $item = new NavigationItem('yiggle_form_wizard.navigation.forms');
-        $item->setIcon('su-forms');
+        $item->setIcon('su-list-check');
         $item->setPosition(35);
         $item->setView(FormWizardKeys::ROOT_VIEW);
 
