@@ -133,7 +133,7 @@ final class YiggleFormWizardBundle extends AbstractBundle
             $builder->prependExtensionConfig('framework', [
                 'asset_mapper' => [
                     'paths' => [
-                        \dirname(__DIR__) . '/assets/css' => 'yiggle/form-wizard-bundle',
+                        \dirname(__DIR__) . '/assets/styles' => 'yiggle/form-wizard-bundle',
                     ],
                 ],
             ]);

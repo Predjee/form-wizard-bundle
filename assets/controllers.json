@@ -3,10 +3,7 @@
     "@yiggle/form-wizard-bundle": {
       "receipt-trigger": {
         "enabled": false,
-        "fetch": "eager",
-        "autoimport": {
-          "assets/css/wizard.css": true
-        }
+        "fetch": "eager"
       }
     }
   },

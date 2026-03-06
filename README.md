@@ -1,226 +1,268 @@
 # Yiggle Form Wizard Bundle
 
-A **Sulu 3** bundle that provides a configurable **multi-step form wizard** with:
+[![CI](https://github.com/Predjee/form-wizard-bundle/actions/workflows/ci.yml/badge.svg)](https://github.com/Predjee/form-wizard-bundle/actions)
+[![Latest
+Version](https://img.shields.io/packagist/v/yiggle/form-wizard-bundle.svg)](https://packagist.org/packages/yiggle/form-wizard-bundle)
+[![Downloads](https://img.shields.io/packagist/dt/yiggle/form-wizard-bundle.svg)](https://packagist.org/packages/yiggle/form-wizard-bundle)
+[![License](https://img.shields.io/github/license/Predjee/form-wizard-bundle.svg)](LICENSE)
 
-- **Sulu Admin** configuration (forms, steps, fields, receivers)
-- Website rendering via a wizard controller + Symfony Forms
-- Optional **payment provider integration** (e.g. Mollie)
-- Email notifications (admin and customer)
-- Export of submissions
+A **Sulu 3** bundle that provides a configurable **multi‑step form
+wizard** with:
 
-> Status: pre-1.0. The API is intended to be stable, but namespaces and extension points may still evolve.
+-   **Sulu Admin** configuration (forms, steps, fields, receivers)
+-   Website rendering via a wizard controller + Symfony Forms
+-   Optional **payment provider integration** (e.g. Mollie)
+-   Email notifications (admin and customer)
+-   Export of submissions
 
-## Compatibility
+> Status: **pre‑1.0**. The public API is intended to be stable, but
+> namespaces and extension points may still evolve.
 
-| Component | Supported |
-|---|---|
-| PHP | 8.4+ |
-| Symfony | 7.4 / 8.x |
-| Sulu | 3.x |
-| Doctrine ORM | 2.20+ / 3.x |
+------------------------------------------------------------------------
 
-## Installation
+# Compatibility
 
-```bash
+| Component     | Supported |
+|---------------|-----------|
+| PHP           | 8.4+      |
+| Symfony       | 7.4 / 8.x |
+| Sulu          | 3.x       |
+| Doctrine ORM  | 2.20+ / 3.x |
+
+# Installation
+
+## 1. Enable the Yiggle recipe repository
+
+The bundle ships its Symfony Flex recipes in a custom repository.
+
+``` bash
+composer config --no-plugins --json extra.symfony.endpoint \
+'["https://api.github.com/repos/Predjee/symfony-recipes/contents/index.json?ref=flex/main","flex://defaults"]'
+```
+
+## 2. Install the bundle
+
+``` bash
 composer require yiggle/form-wizard-bundle
 ```
 
-Enable the bundle (usually not needed with Symfony Flex):
+The Flex recipe will automatically install:
 
-```php
-// config/bundles.php
-return [
-    Yiggle\FormWizardBundle\YiggleFormWizardBundle::class => ['all' => true],
-];
-```
+-   routes
+-   default configuration
+-   post‑install instructions
 
-### Database tables
+------------------------------------------------------------------------
 
-This bundle ships Doctrine entities and expects your project to manage migrations.
+# Database
 
-```bash
+The bundle ships Doctrine entities and expects your project to manage
+migrations.
+
+``` bash
 php bin/console doctrine:migrations:diff
 php bin/console doctrine:migrations:migrate
 ```
 
-### Frontend assets
+------------------------------------------------------------------------
 
-The bundle ships a CSS stylesheet and an optional Stimulus controller for multi-step AJAX UX.
+# Sulu Admin Integration
 
-#### CSS
+The bundle provides a Sulu admin module to manage:
 
-Add the stylesheet to your Twig template:
+-   Wizards (forms)
+-   Steps
+-   Fields
+-   Email receivers
+-   Submissions export
 
-```twig
-{{ asset('yiggle/form-wizard-bundle/wizard.css') }}
+Import the bundle's admin JavaScript in your Sulu admin application:
+
+``` javascript
+import 'yiggle-form-wizard-bundle';
 ```
 
-#### Stimulus controller (optional)
+Example:
 
-Requires `symfony/stimulus-bundle` and `symfony/ux-turbo`:
+    assets/admin/app.js
 
-```bash
+``` javascript
+import 'yiggle-form-wizard-bundle';
+```
+
+Rebuild the Sulu admin interface:
+
+``` bash
+bin/adminconsole sulu:admin:update-build
+```
+
+------------------------------------------------------------------------
+
+# Frontend Assets
+
+The bundle ships optional frontend helpers.
+
+## CSS
+
+An optional stylesheet is available:
+
+``` javascript
+import 'yiggle-form-wizard-bundle/assets/styles/form_wizard.css';
+```
+
+Import it in your frontend build (Webpack, Vite, AssetMapper, etc.).
+
+------------------------------------------------------------------------
+
+## Stimulus controller (optional)
+
+For AJAX‑based wizard flows using Turbo.
+
+Requires:
+
+``` bash
 composer require symfony/stimulus-bundle symfony/ux-turbo
-npm install
 ```
 
-Enable the controller in your project's `assets/controllers.json`:
+Enable the controller in your `assets/controllers.json`:
 
-```json
+``` json
 {
-    "controllers": {
-        "@yiggle/form-wizard-bundle": {
-            "receipt-trigger": {
-                "enabled": true
-            }
-        }
+  "controllers": {
+    "@yiggle/form-wizard-bundle": {
+      "receipt-trigger": {
+        "enabled": true
+      }
     }
+  }
 }
 ```
 
-The controller is disabled by default — enable it only when using the multi-step AJAX UX with Turbo frames.
+------------------------------------------------------------------------
 
-## Configuration
+# Configuration
 
-```yaml
+``` yaml
 # config/packages/yiggle_form_wizard.yaml
+
 yiggle_form_wizard:
+
   notifiers:
     email:
-      default_from_email: 'noreply@example.com'
-      default_from_name: 'Form Wizard'
+      default_from_email: '%env(default::YIGGLE_FORM_WIZARD_DEFAULT_FROM_EMAIL)%'
+      default_from_name: '%env(default::YIGGLE_FORM_WIZARD_DEFAULT_FROM_NAME)%'
 
   payment:
     mollie:
-      enabled: true
-      api_key: '%env(MOLLIE_API_KEY)%'
-      # If you need public URLs in non-public environments (proxies / load balancers), set these:
-      webhook_url_base: '%env(resolve:FW_WEBHOOK_URL_BASE)%'
+      enabled: '%env(bool:default::YIGGLE_FORM_WIZARD_MOLLIE_ENABLED)%'
+      api_key: '%env(default::YIGGLE_FORM_WIZARD_MOLLIE_API_KEY)%'
+      webhook_url_base: '%env(default::YIGGLE_FORM_WIZARD_MOLLIE_WEBHOOK_URL_BASE)%'
 ```
 
-## Usage
+Optional environment variables:
 
-### Admin
+    YIGGLE_FORM_WIZARD_DEFAULT_FROM_EMAIL
+    YIGGLE_FORM_WIZARD_DEFAULT_FROM_NAME
 
-The bundle registers a Sulu Admin module to manage:
+    YIGGLE_FORM_WIZARD_MOLLIE_ENABLED
+    YIGGLE_FORM_WIZARD_MOLLIE_API_KEY
+    YIGGLE_FORM_WIZARD_MOLLIE_WEBHOOK_URL_BASE
 
-- Wizards (forms)
-- Steps
-- Fields + step-field configuration (required, widths, base price, etc.)
-- Receivers + email templates
+------------------------------------------------------------------------
 
-### Website controller
+# Extension Points
 
-The bundle provides a website wizard controller to render and process multi-step forms.
+## Field Types
 
-Routes are provided by the bundle. In a Sulu project, they are typically imported automatically; otherwise import them:
-
-```yaml
-# config/routes/yiggle_form_wizard.yaml
-yiggle_form_wizard:
-  resource: '@YiggleFormWizardBundle/config/routes.yaml'
-```
-
-## Extension points
-
-### 1) Field types
-
-Implement a field type handler:
-
-```php
-use Yiggle\FormWizardBundle\Infrastructure\FieldType\AsWizardFieldType;
-use Yiggle\FormWizardBundle\Domain\Contract\FieldType\WizardFieldTypeHandlerInterface;
-
+``` php
 #[AsWizardFieldType]
 final class MyFieldTypeHandler implements WizardFieldTypeHandlerInterface
 {
-    public function getKey(): string { return 'my_type'; }
+    public function getKey(): string
+    {
+        return 'my_type';
+    }
 
-    public function buildForm(/* ... */): void
+    public function buildForm(): void
     {
         // build Symfony form field
     }
 }
 ```
 
-The bundle automatically tags handlers via `#[AsWizardFieldType]` and discovers them through the registry.
+------------------------------------------------------------------------
 
-If your field type affects pricing, implement:
+## Payment Providers
 
-- `PriceAwareFieldTypeHandlerInterface`
-- `ReceiptAwareFieldTypeHandlerInterface`
-
-### 2) Payment providers
-
-Implement the provider contract:
-
-```php
-use Yiggle\FormWizardBundle\Infrastructure\Payment\Attribute\AsPaymentProvider;
-use Yiggle\FormWizardBundle\Domain\Contract\Payment\PaymentProviderInterface;
-
+``` php
 #[AsPaymentProvider(alias: 'acme')]
 final class AcmeProvider implements PaymentProviderInterface
 {
-    public function getAlias(): string { return 'acme'; }
-    public function isEnabled(): bool { return true; }
+    public function getAlias(): string
+    {
+        return 'acme';
+    }
 
     public function startPayment(WizardSubmission $submission): ?string
     {
-        // set paymentReference/provider on $submission if applicable
         // return checkout URL
     }
 
     public function fetchStatus(string $transactionId): PaymentStatus
     {
-        // query provider and map to PaymentStatus
+        // query provider
     }
 }
 ```
 
-### 3) Notifications
+------------------------------------------------------------------------
 
-Implement `WizardNotifierInterface` and tag it:
+## Notifications
 
-```php
-use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
-use Yiggle\FormWizardBundle\Domain\Contract\WizardNotifierInterface;
-
+``` php
 #[AutoconfigureTag('yiggle_form_wizard.wizard_notifier')]
 final class MyNotifier implements WizardNotifierInterface
 {
-    // ...
 }
 ```
 
-## Events
+------------------------------------------------------------------------
+
+# Events
 
 The bundle dispatches Symfony events for integration:
 
-- `WizardSubmissionCreatedEvent`
-- `WizardPaymentInitiatedEvent`
-- `WizardPaymentFailedEvent`
-- `WizardSubmissionCompletedEvent`
+-   `WizardSubmissionCreatedEvent`
+-   `WizardPaymentInitiatedEvent`
+-   `WizardPaymentFailedEvent`
+-   `WizardSubmissionCompletedEvent`
 
-Use these to hook into custom workflows (CRM sync, analytics, webhooks, etc.).
+------------------------------------------------------------------------
 
-## Development
+# Development
 
-```bash
+``` bash
 composer install
 composer qa
 ```
 
-### QA tools
+QA tools include:
 
-- `ecs` (coding standards)
-- `phpstan`
-- `rector`
-- `phpunit`
+-   ECS
+-   PHPStan
+-   Rector
+-   PHPUnit
 
-## Architectural Decision Records
+------------------------------------------------------------------------
 
-See `docs/adr/`.
+# Architectural Decision Records
 
-## License
+See:
+
+    docs/adr/
+
+------------------------------------------------------------------------
+
+# License
 
 MIT
