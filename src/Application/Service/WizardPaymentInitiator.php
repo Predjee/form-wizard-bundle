@@ -11,6 +11,10 @@ use Yiggle\FormWizardBundle\Application\Payment\PaymentProviderRegistryInterface
 use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardFormInterface;
 use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardSubmissionInterface;
 
+/**
+ * @internal Responsible for initiating payment flows. This class is an internal
+ *           orchestration service and not part of the public API.
+ */
 final readonly class WizardPaymentInitiator
 {
     public function __construct(

@@ -12,6 +12,10 @@ use Yiggle\FormWizardBundle\Application\Payment\PaymentProviderRegistryInterface
 use Yiggle\FormWizardBundle\Domain\Payment\PaymentStatus;
 use Yiggle\FormWizardBundle\Message\ProcessSubmission;
 
+/**
+ * @internal Handles synchronization of payment status updates and triggers follow-up
+ *           processing. This service is internal to the bundle.
+ */
 final readonly class PaymentStatusProcessor
 {
     public function __construct(

@@ -7,10 +7,12 @@ namespace Yiggle\FormWizardBundle\Application\Service;
 use Symfony\Component\Form\Flow\FormFlowInterface;
 use Yiggle\FormWizardBundle\Application\Data\WizardFlowData;
 use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardFormInterface;
-use Yiggle\FormWizardBundle\Domain\Model\WizardReceipt;
+use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardReceiptInterface;
 use Yiggle\FormWizardBundle\Support\PHPStan\Types;
 
 /**
+ * @internal Resolves receipt models for completed submissions.
+ *           This is an internal helper service.
  * @phpstan-import-type SubmittedData from Types
  */
 final readonly class ReceiptResolver
@@ -20,7 +22,7 @@ final readonly class ReceiptResolver
     ) {
     }
 
-    public function fromFlow(FormFlowInterface $flow, WizardFormInterface $wizard): WizardReceipt
+    public function fromFlow(FormFlowInterface $flow, WizardFormInterface $wizard): WizardReceiptInterface
     {
         $flowData = WizardFlowData::fromArray(
             is_array($flow->getData()) ? $flow->getData() : []
@@ -37,7 +39,7 @@ final readonly class ReceiptResolver
         WizardFormInterface $wizard,
         ?array $savedArray,
         array $postData,
-    ): WizardReceipt {
+    ): WizardReceiptInterface {
         $flowData = WizardFlowData::fromArray(is_array($savedArray) ? $savedArray : []);
         $flowData = $flowData->withMergedPostData($postData);
 

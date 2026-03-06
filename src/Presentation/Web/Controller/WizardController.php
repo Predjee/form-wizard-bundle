@@ -10,6 +10,9 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Yiggle\FormWizardBundle\Presentation\Web\Service\WizardRuntime;
 
+/**
+ * @internal Controller responsible for rendering and processing wizard flows.
+ */
 #[Route('/_wizard/{id}', name: 'fw_wizard', methods: ['GET', 'POST'])]
 final class WizardController extends AbstractController
 {

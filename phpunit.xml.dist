@@ -6,13 +6,16 @@
          failOnRisky="true"
          failOnWarning="true"
          beStrictAboutOutputDuringTests="true"
+         displayDetailsOnTestsThatTriggerNotices="true"
+         displayDetailsOnTestsThatTriggerWarnings="true"
+         displayDetailsOnTestsThatTriggerDeprecations="true"
 >
     <php>
         <env name="KERNEL_CLASS" value="Yiggle\FormWizardBundle\Tests\Kernel\MinimalTestKernel" />
         <env name="APP_ENV" value="test"/>
         <env name="APP_DEBUG" value="0" />
         <env name="SHELL_VERBOSITY" value="-1"/>
-        <env name="SYMFONY_DEPRECATIONS_HELPER" value="max[self]=0"/>
+        <env name="SYMFONY_DEPRECATIONS_HELPER" value="max[total]=0" />
         <env name="YIGGLE_FW_DISABLE_SULU" value="1"/>
     </php>
 

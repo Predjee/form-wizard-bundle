@@ -8,6 +8,10 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\UriSigner;
 
+/**
+ * @internal Utility service for generating signed return URLs for payment providers.
+ *           Not intended for public extension.
+ */
 final readonly class ReturnUrlService implements ReturnUrlServiceInterface
 {
     public function __construct(

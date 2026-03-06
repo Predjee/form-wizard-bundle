@@ -5,11 +5,16 @@ declare(strict_types=1);
 namespace Yiggle\FormWizardBundle\Application\Service;
 
 use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
+use Yiggle\FormWizardBundle\Application\Contract\NotificationDispatcherInterface;
 use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardFormInterface;
 use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardSubmissionInterface;
 use Yiggle\FormWizardBundle\Domain\Contract\WizardNotifierInterface;
 
-final readonly class NotificationService
+/**
+ * @internal Dispatches notification channels after a submission is processed.
+ *           This service is an internal coordination layer.
+ */
+final readonly class NotificationService implements NotificationDispatcherInterface
 {
     /**
      * @param iterable<WizardNotifierInterface> $notifiers

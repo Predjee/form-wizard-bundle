@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Yiggle\FormWizardBundle\Domain\Model;
 
 use Symfony\Component\Validator\Constraints as Assert;
+use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardReceiptInterface;
 
-final readonly class WizardReceipt
+final readonly class WizardReceipt implements WizardReceiptInterface
 {
     public function __construct(
         /**
@@ -47,5 +48,10 @@ final readonly class WizardReceipt
             $groups[$gk]['items'][$it][] = $line;
         }
         return $groups;
+    }
+
+    public function getLines(): array
+    {
+        return $this->lines;
     }
 }

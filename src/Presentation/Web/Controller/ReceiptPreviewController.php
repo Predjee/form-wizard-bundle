@@ -12,6 +12,9 @@ use Symfony\UX\Turbo\TurboStreamResponse;
 use Yiggle\FormWizardBundle\Application\Service\ReceiptResolver;
 use Yiggle\FormWizardBundle\Infrastructure\Persistence\Doctrine\Repository\WizardFormRepository;
 
+/**
+ * @internal Messenger message used internally to trigger asynchronous submission processing.
+ */
 #[Route('/_wizard/preview/{id}', name: 'fw_wizard_preview', methods: ['POST'])]
 final class ReceiptPreviewController extends AbstractController
 {

@@ -44,17 +44,19 @@ final class TestExportController
             ]
         );
 
-        $headers = $this->exporter->buildHeaders($submissions);
+        $headers = $this->exporter->buildHeaders($form);
 
         $fh = fopen('php://temp', 'r+');
         if ($fh === false) {
             throw new \RuntimeException('Unable to open temporary memory stream for CSV export.');
         }
 
+        fwrite($fh, "\xEF\xBB\xBF");
+
         fputcsv($fh, $headers, escape: '');
 
         foreach ($submissions as $submission) {
-            foreach ($this->exporter->rowsForSubmission($submission) as $row) {
+            foreach ($this->exporter->rowsForSubmission($form, $submission) as $row) {
                 $line = [];
                 foreach ($headers as $h) {
                     $line[] = $row[$h] ?? '';

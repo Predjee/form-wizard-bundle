@@ -3,104 +3,115 @@ yiggle_form_wizard:
     required: "This field is required."
     email_invalid: "Please enter a valid email address."
     min_number: "The value must be at least {{ value }}."
-    max_number: "The value may not exceed {{ value }}."
-    must_accept: "You must accept the terms and conditions."
-
+    max_number: "The value must be at most {{ value }}."
+    must_accept: "You must agree to the terms and conditions."
   choice:
-    placeholder: "Make a selection..."
-
+    placeholder: "Make a choice..."
   navigation:
     forms: "Form Wizards"
-
-  forms: "Form Wizards"
-
-  tabs:
-    steps: "Wizard Steps"
-    email: "Email Settings"
-
   title: "Title"
   enabled: "Enabled"
   webspace: "Webspace"
   website_configuration: "Website Configuration"
-  submit_label: "Submit Button Label"
+  submit_label: "Submit Button Text"
   payment_mode: "Payment Method"
   success_text: "Success Message"
-
   steps: "Steps"
   step: "Step"
   step_title: "Step Title"
   fields: "Fields"
-
   field:
+    choice:
+      select_option: "Make your choice..."
     type:
-      text: "Text"
-      email: "Email"
-      tel: "Phone"
-      integer: "Number"
-      checkbox: "Checkbox"
-      choice: "Select"
-      textarea: "Textarea"
-      date: "Date"
-    width: "Width"
-    placeholder: "Placeholder"
-    options: "Options (one per line)"
-    min: "Minimum"
-    max: "Maximum"
-    multiple: "Allow multiple selections"
-    expanded: "Display as radio/checkboxes"
-    rows: "Number of rows"
-
-  email:
-    subject: "Subject"
-    from_email: "Sender Email"
-    from_name: "Sender Name"
-    customer_email_field: "Customer Email Field"
-    disable_admin: "Disable admin emails"
-    disable_customer: "Disable customer emails"
-    include_copy: "Include copy"
-    receivers: "Admin Recipients"
-    receiver_type: "Type"
-
-  choices:
-    none: "None"
-    afterward: "Afterwards"
-    required: "Required"
-    to: "To"
-    cc: "CC"
-    bcc: "BCC"
-
+      text: Text
+      email: E-mail
+      tel: Phone
+      integer: Number
+      checkbox: Checkbox
+      choice: Select list
+      textarea: Text area
+      date: Date
+    width: Width
+    placeholder: Placeholder
+    options: "Options (1 per line)"
+    min: Minimum
+    max: Maximum
+    multiple: Multiple choices
+    expanded: Show as radio/checkboxes
+    rows: Number of rows
+    checkbox:
+      receipt:
+        default_label: 'Yes'
+    radio:
+      receipt:
+        true_label: 'Yes'
+        false_label: 'No'
   form_wizard:
-    success: "Thank you! Your registration has been received."
-
+    success: "Thank you for filling out the form."
+    navigation: 'Navigation'
   dynamic_form_wizard: "Form Wizards"
-
   wizard:
-    step_instruction: "Fill in the fields below to continue."
+    step_instruction: "Please fill in the fields below to continue."
     prev: "Previous"
     next: "Next"
     finish: "Submit"
     success_title: "Thank you!"
     success_default_text: "Your submission has been successfully received."
-    back_home: "Back to home"
-    default_title: "Register"
+    back_home: "Back to start"
+    default_title: "Sign up"
     current_step: "Current step"
     reset: "Start over"
-
+    row_label: "Add row"
+    remove_row: "Remove row"
     receipt:
-      title: "Summary"
+      title: "Overview"
       total: "Total"
-
+      empty: 'Nothing added yet.'
     success:
       title: "Success!"
       text: "Thank you for your registration."
       cta: "Back"
-
     payment:
       redirecting: "You are being redirected to the payment page…"
-
+    step: 'Step'
+    steps: 'Steps'
+    summary:
+      title: 'Summary'
+      subtitle: 'Subtitle'
+      details_title: 'Details'
   mail:
     admin:
       default_subject: "New registration on website"
-
   payment:
     redirecting: "You are being redirected to the payment page…"
+  current_step: 'Current step'
+  receipt:
+    title: 'Summary'
+    success:
+      cta: 'Thank you'
+    total: 'Total'
+    empty: 'Please make a selection'
+  admin:
+    field:
+      tel:
+        invalid_format: 'Invalid phone number format'
+      email:
+        invalid_format: 'Invalid email address format'
+      date:
+        min: 'Date must be after'
+        max: 'Date must be before'
+      range:
+        min: 'Minimum must be greater than'
+        max: 'Maximum must be less than'
+  success:
+    link_label: 'Thank you'
+  email:
+    summary_title: 'Submitted data'
+  export:
+    date: 'Submission Date'
+    reference_id: 'Reference ID'
+    total_paid: 'Total Paid'
+    row_price: 'Row Price'
+    yes: 'Yes'
+    no: 'No'

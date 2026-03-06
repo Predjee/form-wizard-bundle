@@ -6,6 +6,9 @@ namespace Yiggle\FormWizardBundle\Application\UseCase\CompleteWizard;
 
 use Yiggle\FormWizardBundle\Application\Contract\WizardCompletionInterface;
 
+/**
+ * @internal
+ */
 final readonly class CompleteWizard
 {
     public function __construct(

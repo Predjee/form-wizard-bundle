@@ -5,8 +5,12 @@ declare(strict_types=1);
 namespace Yiggle\FormWizardBundle\Application\Service;
 
 use Symfony\Component\HttpFoundation\RequestStack;
-use Yiggle\FormWizardBundle\Domain\Model\WizardReceipt;
+use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardReceiptInterface;
 
+/**
+ * @internal Stores temporary completion state between request transitions.
+ *           This implementation detail may change.
+ */
 final readonly class WizardCompletionState
 {
     private const SESSION_PREFIX = 'fw_completed_';
@@ -18,7 +22,7 @@ final readonly class WizardCompletionState
     ) {
     }
 
-    public function markCompleted(string $wizardId, ?WizardReceipt $receipt = null): void
+    public function markCompleted(string $wizardId, ?WizardReceiptInterface $receipt = null): void
     {
         $session = $this->requestStack->getSession();
         $session->set($this->key($wizardId), true);
@@ -28,11 +32,11 @@ final readonly class WizardCompletionState
         }
     }
 
-    public function getSummary(string $wizardId): ?WizardReceipt
+    public function getSummary(string $wizardId): ?WizardReceiptInterface
     {
         $data = $this->requestStack->getSession()->get($this->key($wizardId) . self::DATA_SUFFIX);
 
-        return $data instanceof WizardReceipt ? $data : null;
+        return $data instanceof WizardReceiptInterface ? $data : null;
     }
 
     public function consume(string $wizardId): bool

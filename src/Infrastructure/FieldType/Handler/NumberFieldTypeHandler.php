@@ -10,6 +10,9 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 use Yiggle\FormWizardBundle\Infrastructure\FieldType\AbstractWizardFieldTypeHandler;
 use Yiggle\FormWizardBundle\Infrastructure\FieldType\AsWizardFieldType;
 
+/**
+ * @internal Built-in field type handler.
+ */
 #[AsWizardFieldType]
 final class NumberFieldTypeHandler extends AbstractWizardFieldTypeHandler
 {

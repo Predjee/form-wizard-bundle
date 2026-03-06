@@ -8,6 +8,9 @@ use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Yiggle\FormWizardBundle\Infrastructure\FieldType\AbstractWizardFieldTypeHandler;
 use Yiggle\FormWizardBundle\Infrastructure\FieldType\AsWizardFieldType;
 
+/**
+ * @internal Built-in field type handler.
+ */
 #[AsWizardFieldType]
 final class TextareaFieldTypeHandler extends AbstractWizardFieldTypeHandler
 {

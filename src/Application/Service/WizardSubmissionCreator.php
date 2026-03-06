@@ -7,6 +7,7 @@ namespace Yiggle\FormWizardBundle\Application\Service;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Yiggle\FormWizardBundle\Application\Contract\EventBusInterface;
+use Yiggle\FormWizardBundle\Application\Contract\WizardSubmissionCreatorInterface;
 use Yiggle\FormWizardBundle\Application\Contract\WizardSubmissionRepositoryInterface;
 use Yiggle\FormWizardBundle\Application\Data\WizardFlowData;
 use Yiggle\FormWizardBundle\Application\Event\WizardSubmissionCreatedEvent;
@@ -17,7 +18,11 @@ use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardSubmissionInterface;
 use Yiggle\FormWizardBundle\Domain\Payment\PaymentMode;
 use Yiggle\FormWizardBundle\Domain\Payment\PaymentStatus;
 
-final readonly class WizardSubmissionCreator
+/**
+ * @internal This service orchestrates creation of wizard submissions and is considered
+ *           an internal implementation detail of the bundle.
+ */
+final readonly class WizardSubmissionCreator implements WizardSubmissionCreatorInterface
 {
     public function __construct(
         private RequestStack $requestStack,
@@ -41,7 +46,7 @@ final readonly class WizardSubmissionCreator
 
         $submission->setForm($wizard);
         $submission->setData($data->steps);
-        $submission->setTotalAmountCents($receipt->totalInCents);
+        $submission->setTotalAmountCents($receipt->getTotalCents());
         $submission->setCurrency($currency);
         $submission->setProvider($wizard->getPaymentProvider());
 

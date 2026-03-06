@@ -7,6 +7,9 @@ namespace Yiggle\FormWizardBundle\Infrastructure\Symfony;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Yiggle\FormWizardBundle\Application\Contract\EventBusInterface;
 
+/**
+ * @internal Symfony adapter used to dispatch domain/application events.
+ */
 final readonly class SymfonyEventBus implements EventBusInterface
 {
     public function __construct(

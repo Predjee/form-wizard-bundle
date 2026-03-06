@@ -6,7 +6,9 @@ namespace Yiggle\FormWizardBundle\Infrastructure\Payment\Attribute;
 
 use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 
-// Tag name matches PaymentProviderRegistry (and config/services.php) so providers can be discovered consistently.
+/**
+ * @internal
+ */
 #[AutoconfigureTag('yiggle_form_wizard.payment_provider')]
 #[\Attribute(\Attribute::TARGET_CLASS)]
 final class AsPaymentProvider

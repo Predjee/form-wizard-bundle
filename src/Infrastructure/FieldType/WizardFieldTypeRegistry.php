@@ -8,6 +8,9 @@ use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 use Yiggle\FormWizardBundle\Domain\Contract\FieldType\WizardFieldTypeHandlerInterface;
 use Yiggle\FormWizardBundle\Domain\Contract\FieldType\WizardFieldTypeRegistryInterface;
 
+/**
+ * @internal Registry resolving field type handlers.
+ */
 final class WizardFieldTypeRegistry implements WizardFieldTypeRegistryInterface
 {
     /**

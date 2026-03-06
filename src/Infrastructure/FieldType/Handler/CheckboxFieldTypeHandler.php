@@ -9,6 +9,9 @@ use Symfony\Component\Validator\Constraints\IsTrue;
 use Yiggle\FormWizardBundle\Infrastructure\FieldType\AbstractWizardFieldTypeHandler;
 use Yiggle\FormWizardBundle\Infrastructure\FieldType\AsWizardFieldType;
 
+/**
+ * @internal Built-in field type handler.
+ */
 #[AsWizardFieldType]
 final class CheckboxFieldTypeHandler extends AbstractWizardFieldTypeHandler
 {

@@ -9,6 +9,9 @@ use Symfony\Component\Serializer\Normalizer\DenormalizerAwareTrait;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Yiggle\FormWizardBundle\Application\DTO\Admin\WizardStepFieldInput;
 
+/**
+ * @internal Serializer helper used by the Sulu admin integration.
+ */
 final class WizardFieldDenormalizer implements DenormalizerInterface, DenormalizerAwareInterface
 {
     use DenormalizerAwareTrait;

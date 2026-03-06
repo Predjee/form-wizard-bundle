@@ -10,6 +10,9 @@ use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardStepFieldInterface;
 use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardStepInterface;
 use Yiggle\FormWizardBundle\Domain\Entity\WizardStepField;
 
+/**
+ * @internal Internal factory for step field entities.
+ */
 final class WizardStepFieldFactory implements WizardStepFieldFactoryInterface
 {
     public function create(

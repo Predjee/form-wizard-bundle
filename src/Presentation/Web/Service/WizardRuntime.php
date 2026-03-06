@@ -18,15 +18,18 @@ use Yiggle\FormWizardBundle\Application\UseCase\CompleteWizard\CompleteWizard;
 use Yiggle\FormWizardBundle\Application\UseCase\CompleteWizard\CompleteWizardRequest;
 use Yiggle\FormWizardBundle\Presentation\Web\Form\Flow\WizardFlowType;
 
-final class WizardRuntime
+/**
+ * @internal Runtime helper responsible for resolving wizard state during rendering.
+ */
+final readonly class WizardRuntime
 {
     public function __construct(
-        private readonly FormFactoryInterface $formFactory,
-        private readonly WizardFormRepositoryInterface $wizardFormRepository,
-        private readonly ReceiptResolver $receiptResolver,
-        private readonly CompleteWizard $completeWizard,
-        private readonly WizardCompletionState $completionState,
-        private readonly ReturnUrlServiceInterface $returnUrlService,
+        private FormFactoryInterface $formFactory,
+        private WizardFormRepositoryInterface $wizardFormRepository,
+        private ReceiptResolver $receiptResolver,
+        private CompleteWizard $completeWizard,
+        private WizardCompletionState $completionState,
+        private ReturnUrlServiceInterface $returnUrlService,
     ) {
     }
 
@@ -61,7 +64,7 @@ final class WizardRuntime
         ])->handleRequest($request);
 
         $receipt = $this->receiptResolver->fromFlow($flow, $wizard);
-        $showReceipt = \count($receipt->lines) > 0;
+        $showReceipt = \count($receipt->getLines()) > 0;
 
         if ($flow->isSubmitted() && $flow->isValid() && $flow->isFinished()) {
             $finalArray = $flow->getConfig()->getDataStorage()->load() ?? $flow->getData() ?? [];

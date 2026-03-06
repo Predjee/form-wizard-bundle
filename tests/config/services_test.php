@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
 use Yiggle\FormWizardBundle\Application\Export\SubmissionCsvExporter;
-use Yiggle\FormWizardBundle\Application\Export\SubmissionFlattener;
 use Yiggle\FormWizardBundle\Application\Service\WizardSubmissionCreator;
 use Yiggle\FormWizardBundle\Tests\Controller\TestExportController;
 
@@ -17,7 +16,6 @@ return static function (ContainerConfigurator $container): void {
         ->autoconfigure()
         ->public();
 
-    $services->set(SubmissionFlattener::class);
     $services->set(SubmissionCsvExporter::class);
 
     $services->set(WizardSubmissionCreator::class);

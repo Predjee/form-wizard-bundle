@@ -7,6 +7,9 @@ namespace Yiggle\FormWizardBundle\Presentation\Web\WizardMount;
 use Sulu\Content\Application\ContentResolver\Value\ContentView;
 use Yiggle\FormWizardBundle\Infrastructure\Sulu\Content\ResourceLoader\WizardResourceLoader;
 
+/**
+ * @internal Internal resolver used to determine wizard mount configuration.
+ */
 final class HybridWizardMountResolver implements WizardMountResolverInterface
 {
     public function resolve(array $suluParameters): array

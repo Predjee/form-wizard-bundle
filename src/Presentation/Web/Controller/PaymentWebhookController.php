@@ -11,6 +11,9 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Yiggle\FormWizardBundle\Application\Service\PaymentStatusProcessor;
 
+/**
+ * @internal Controller handling payment provider webhooks.
+ */
 final class PaymentWebhookController extends AbstractController
 {
     public function __construct(

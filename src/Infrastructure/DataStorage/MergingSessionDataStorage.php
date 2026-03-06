@@ -7,6 +7,9 @@ namespace Yiggle\FormWizardBundle\Infrastructure\DataStorage;
 use Symfony\Component\Form\Flow\DataStorage\DataStorageInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
+/**
+ * @internal Session storage implementation used internally by the wizard runtime.
+ */
 final readonly class MergingSessionDataStorage implements DataStorageInterface
 {
     public function __construct(

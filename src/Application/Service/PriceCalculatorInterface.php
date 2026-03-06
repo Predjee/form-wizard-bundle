@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Yiggle\FormWizardBundle\Application\Service;
 
 use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardFormInterface;
-use Yiggle\FormWizardBundle\Domain\Model\WizardReceipt;
+use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardReceiptInterface;
 use Yiggle\FormWizardBundle\Support\PHPStan\Types;
 
 /**
@@ -17,5 +17,5 @@ interface PriceCalculatorInterface
     /**
      * @param SubmittedData $submittedData
      */
-    public function getReceipt(WizardFormInterface $form, array $submittedData): WizardReceipt;
+    public function getReceipt(WizardFormInterface $form, array $submittedData): WizardReceiptInterface;
 }

@@ -11,6 +11,7 @@ use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardFormInterface;
 use Yiggle\FormWizardBundle\Domain\Entity\WizardForm;
 
 /**
+ * @internal
  * @extends ServiceEntityRepository<WizardForm>
  */
 final class WizardFormRepository extends ServiceEntityRepository implements WizardFormRepositoryInterface

@@ -5,41 +5,54 @@ declare(strict_types=1);
 namespace Yiggle\FormWizardBundle\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
+use Symfony\Contracts\Translation\TranslatorInterface;
 use Yiggle\FormWizardBundle\Application\Export\SubmissionCsvExporter;
-use Yiggle\FormWizardBundle\Application\Export\SubmissionFlattener;
-use Yiggle\FormWizardBundle\Domain\Entity\WizardForm;
-use Yiggle\FormWizardBundle\Domain\Entity\WizardSubmission;
-use Yiggle\FormWizardBundle\Domain\Payment\PaymentStatus;
+use Yiggle\FormWizardBundle\Application\Service\PriceCalculatorInterface;
+use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardFormInterface;
+use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardReceiptInterface;
+use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardSubmissionInterface;
 
 final class SubmissionCsvExporterTest extends TestCase
 {
-    public function testItBuildsHeadersAndRows(): void
+    public function testItBuildsHeadersAndRowsWithTranslationKeys(): void
     {
-        $exporter = new SubmissionCsvExporter(new SubmissionFlattener());
+        $translator = $this->createStub(TranslatorInterface::class);
+        $priceCalculator = $this->createStub(PriceCalculatorInterface::class);
 
-        $wizard = new WizardForm('w');
-        $wizard->setTitle('T');
+        $translator->method('trans')->willReturnCallback(fn ($id) => $id);
 
-        $s = new WizardSubmission('s1');
-        $s->setForm($wizard);
-        $s->setStatus(PaymentStatus::Completed);
-        $s->setCurrency('EUR');
-        $s->setTotalAmountCents(123);
-        $s->setData([
-            'step-1' => [
-                'email' => 'a@b.com',
-                'name' => 'Test',
-            ],
-        ]);
+        $exporter = new SubmissionCsvExporter($priceCalculator, $translator, 'yiggle_form_wizard');
 
-        $headers = $exporter->buildHeaders([$s]);
+        $wizard = $this->createStub(WizardFormInterface::class);
+        $submission = $this->createStub(WizardSubmissionInterface::class);
 
-        self::assertContains('submission_id', $headers);
-        self::assertContains('status', $headers);
-        self::assertContains('step-1.email', $headers);
+        $receipt = $this->createStub(WizardReceiptInterface::class);
+        $receipt->method('getTotalCents')->willReturn(1000);
+        $receipt->method('getGroupedLines')->willReturn([]);
 
-        $rows = iterator_to_array($exporter->rowsForSubmission($s));
-        self::assertCount(1, $rows);
-        self::assertSame('a@b.com', $rows[0]['step-1.email']);
+        $priceCalculator->method('getReceipt')
+            ->willReturn($receipt);
+
+        $createdAt = new \DateTimeImmutable('2024-01-01 12:00:00');
+        $submission->method('getCreatedAt')->willReturn($createdAt);
+        $submission->method('getUuid')->willReturn('test-uuid-123');
+        $submission->method('getData')->willReturn([]);
+
+        $wizard->method('getSteps')->willReturn([]);
+
+        $headers = $exporter->buildHeaders($wizard);
+
+        $this->assertContains('yiggle_form_wizard.export.date', $headers);
+        $this->assertContains('yiggle_form_wizard.export.reference_id', $headers);
+        $this->assertContains('yiggle_form_wizard.export.total_paid', $headers);
+
+        $rows = $exporter->rowsForSubmission($wizard, $submission);
+
+        $this->assertCount(1, $rows);
+        $row = $rows[0];
+
+        $this->assertSame('01-01-2024 12:00', $row['yiggle_form_wizard.export.date']);
+        $this->assertSame('test-uuid-123', $row['yiggle_form_wizard.export.reference_id']);
+        $this->assertSame('10,00', $row['yiggle_form_wizard.export.total_paid']);
     }
 }

@@ -14,6 +14,9 @@ use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardFormInterface;
 use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardSubmissionInterface;
 use Yiggle\FormWizardBundle\Domain\Contract\WizardNotifierInterface;
 
+/**
+ * @internal Default email notification implementation.
+ */
 #[AutoconfigureTag('yiggle_form_wizard.wizard_notifier')]
 final readonly class EmailNotifier implements WizardNotifierInterface
 {

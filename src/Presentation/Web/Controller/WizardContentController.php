@@ -12,6 +12,9 @@ use Symfony\Component\HttpFoundation\Response;
 use Yiggle\FormWizardBundle\Presentation\Web\Service\WizardRuntime;
 use Yiggle\FormWizardBundle\Presentation\Web\WizardMount\WizardMountResolverInterface;
 
+/**
+ * @internal Controller used by Sulu content rendering.
+ */
 final class WizardContentController extends ContentController
 {
     public function __construct(

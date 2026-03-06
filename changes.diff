@@ -1,0 +1,1971 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 12eea34..60ef385 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -2,6 +2,24 @@
+ 
+ All notable changes to this project will be documented in this file.
+ 
+-The format is based on *Keep a Changelog* and this project adheres to *Semantic Versioning*.
++The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
++and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+ 
+-## [Unreleased]
++## [0.2.0] - 2026-03-06
++
++### Added
++- **SubmissionCsvExporter**: Introduced a new robust exporter using `StreamedResponse` for better memory management.
++- **WizardReceiptInterface**: Added a domain-level interface to decouple receipt logic from implementation.
++- **Excel Compatibility**: Added UTF-8 BOM to CSV exports to ensure correct character rendering in Microsoft Excel.
++- **Translated Headers**: Column headers are now dynamically translated using the `yiggle_form_wizard` domain.
++
++### Changed
++- **PriceCalculatorInterface**: Updated return type to `WizardReceiptInterface` to improve abstraction and testability.
++- **Architecture Refactor**: Shifted from generic data-flattening to explicit, field-based export logic.
++- **Test Suite**: Fully refactored Unit and Functional tests for PHPUnit 12 compatibility, including improved type-safety and cache handling.
++
++### Removed
++- **SubmissionFlattener**: This class was removed as its logic is now superseded by the `SubmissionCsvExporter`. This is a **breaking change**.
++
++## [0.1.0] - 2026-03-05
++- Initial release with basic form wizard functionality.
+diff --git a/phpunit.xml.dist b/phpunit.xml.dist
+index 1c2bb61..03d9f16 100644
+--- a/phpunit.xml.dist
++++ b/phpunit.xml.dist
+@@ -6,13 +6,16 @@
+          failOnRisky="true"
+          failOnWarning="true"
+          beStrictAboutOutputDuringTests="true"
++         displayDetailsOnTestsThatTriggerNotices="true"
++         displayDetailsOnTestsThatTriggerWarnings="true"
++         displayDetailsOnTestsThatTriggerDeprecations="true"
+ >
+     <php>
+         <env name="KERNEL_CLASS" value="Yiggle\FormWizardBundle\Tests\Kernel\MinimalTestKernel" />
+         <env name="APP_ENV" value="test"/>
+         <env name="APP_DEBUG" value="0" />
+         <env name="SHELL_VERBOSITY" value="-1"/>
+-        <env name="SYMFONY_DEPRECATIONS_HELPER" value="max[self]=0"/>
++        <env name="SYMFONY_DEPRECATIONS_HELPER" value="max[total]=0" />
+         <env name="YIGGLE_FW_DISABLE_SULU" value="1"/>
+     </php>
+ 
+diff --git a/src/Application/Export/SubmissionCsvExporter.php b/src/Application/Export/SubmissionCsvExporter.php
+index e71c6e2..ceef13a 100644
+--- a/src/Application/Export/SubmissionCsvExporter.php
++++ b/src/Application/Export/SubmissionCsvExporter.php
+@@ -4,75 +4,131 @@ declare(strict_types=1);
+ 
+ namespace Yiggle\FormWizardBundle\Application\Export;
+ 
++use Symfony\Contracts\Translation\TranslatorInterface;
++use Yiggle\FormWizardBundle\Application\Service\PriceCalculatorInterface;
++use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardFormInterface;
+ use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardSubmissionInterface;
++use Yiggle\FormWizardBundle\Domain\Model\ReceiptLine;
+ 
++/**
++ * @internal Utility service used for exporting submission data.
++ */
+ final readonly class SubmissionCsvExporter
+ {
+     public function __construct(
+-        private SubmissionFlattener $flattener,
++        private PriceCalculatorInterface $priceCalculator,
++        private TranslatorInterface $translator,
++        private string $translationDomain = 'yiggle_form_wizard'
+     ) {
+     }
+ 
+     /**
+-     * @param iterable<WizardSubmissionInterface> $submissions
+-     * @return array<string>
++     * @return string[]
+      */
+-    public function buildHeaders(iterable $submissions): array
++    public function buildHeaders(WizardFormInterface $wizard): array
+     {
+-        $base = [
+-            'submission_id',
+-            'submitted_at',
+-            'status',
+-            'currency',
+-            'total_amount_cents',
++        $headers = [
++            $this->trans('export.date'),
++            $this->trans('export.reference_id'),
++            $this->trans('export.total_paid'),
+         ];
+ 
+-        $keys = [];
+-        foreach ($submissions as $submission) {
+-            foreach ($this->rowsForSubmission($submission) as $row) {
+-                foreach (array_keys($row) as $k) {
+-                    $keys[$k] = true;
++        foreach ($wizard->getSteps() as $step) {
++            foreach ($step->getStepFields() as $stepField) {
++                $field = $stepField->getField();
++                $label = $field->getLabel() ?: $field->getName();
++                /** @var array{rowFields?: array<int, array{name: string, label?: string}>} $config */
++                $config = $field->getConfig();
++
++                if ($field->getType() === 'wizard_repeatable_group') {
++                    foreach ($config['rowFields'] ?? [] as $rf) {
++                        $headers[] = sprintf('%s - %s', $label, $rf['label'] ?? $rf['name']);
++                    }
++                    $headers[] = sprintf('%s - %s', $label, $this->trans('export.row_price'));
++                } else {
++                    $headers[] = $label;
+                 }
+             }
+         }
+-
+-        foreach ($base as $k) {
+-            unset($keys[$k]);
+-        }
+-
+-        $dynamic = array_keys($keys);
+-        sort($dynamic, SORT_STRING);
+-
+-        return array_merge($base, $dynamic);
++        return $headers;
+     }
+ 
+     /**
+-     * @return iterable<array<string, string>>
++     * @return array<int, array<string, string>>
+      */
+-    public function rowsForSubmission(WizardSubmissionInterface $submission): iterable
++    public function rowsForSubmission(WizardFormInterface $wizard, WizardSubmissionInterface $submission): array
+     {
+-        $base = [
+-            'submission_id' => $submission->getUuid(),
+-            'submitted_at' => $submission->getCreatedAt()->format('Y-m-d H:i:s'),
+-            'status' => $submission->getStatus()->value,
+-            'currency' => $submission->getCurrency(),
+-            'total_amount_cents' => (string) $submission->getTotalAmountCents(),
++        $data = $submission->getData();
++        $receipt = $this->priceCalculator->getReceipt($wizard, $data);
++        /** @var array<string, array{items: array<string, list<ReceiptLine>>}> $grouped */
++        $grouped = $receipt->getGroupedLines();
++
++        $staticRow = [
++            $this->trans('export.date') => $submission->getCreatedAt()->format('d-m-Y H:i'),
++            $this->trans('export.reference_id') => $submission->getUuid(),
++            $this->trans('export.total_paid') => number_format($receipt->getTotalCents() / 100, 2, ',', '.'),
+         ];
+ 
+-        $data = $submission->getData();
+-        $rows = $this->flattener->flattenToRows($data);
++        /** @var array<int, array<string, string>> $nestedRows */
++        $nestedRows = [];
++
++        foreach ($wizard->getSteps() as $step) {
++            /** @var array<string, mixed> $stepData */
++            $stepData = $data[$step->getUuid()] ?? [];
++
++            foreach ($step->getStepFields() as $sf) {
++                $field = $sf->getField();
++                $name = $field->getName();
++                /** @var array{rowFields?: array<int, array{name: string, label?: string, options?: array<int, mixed>}>, options?: array<int, mixed>} $cfg */
++                $cfg = $field->getConfig();
++                $val = $stepData[$name] ?? null;
++                $lbl = $field->getLabel() ?: $name;
+ 
+-        foreach ($rows as $r) {
+-            yield $base + $this->stringifyRow($r);
++                if ($field->getType() === 'wizard_repeatable_group' && is_array($val)) {
++                    foreach (array_values($val) as $idx => $entry) {
++                        $itemTitle = '# ' . ($idx + 1);
++                        $rowPrice = 0;
++                        foreach ($cfg['rowFields'] ?? [] as $rf) {
++                            $col = sprintf('%s - %s', $lbl, $rf['label'] ?? $rf['name']);
++                            $options = is_array($rf['options'] ?? null) ? $rf['options'] : [];
++                            $nestedRows[$idx][$col] = $this->formatValue($entry[$rf['name']] ?? null, $options);
++                        }
++                        foreach ($grouped[$name]['items'][$itemTitle] ?? [] as $line) {
++                            $rowPrice += $line->amountCents;
++                        }
++                        $nestedRows[$idx][sprintf('%s - %s', $lbl, $this->trans('export.row_price'))] = number_format($rowPrice / 100, 2, ',', '.');
++                    }
++                } else {
++                    $options = is_array($cfg['options'] ?? null) ? $cfg['options'] : [];
++                    $staticRow[$lbl] = $this->formatValue($val, $options);
++                }
++            }
+         }
++
++        return empty($nestedRows) ? [$staticRow] : array_map(fn ($r) => array_merge($staticRow, (array) $r), $nestedRows);
+     }
+ 
+     /**
+-     * @param array<string, mixed> $row
+-     * @return array<string, string>
++     * @param array<int, mixed> $opts
+      */
+-    private function stringifyRow(array $row): array
++    private function formatValue(mixed $val, array $opts = []): string
++    {
++        if ($val === null || $val === '') {
++            return '';
++        }
++        if (is_bool($val)) {
++            return $val ? $this->trans('export.yes') : $this->trans('export.no');
++        }
++        foreach ($opts as $o) {
++            if (is_array($o) && (string) ($o['value'] ?? '') === (string) $val) {
++                return (string) ($o['label'] ?? $val);
++            }
++        }
++        return is_array($val) ? (json_encode($val) ?: '') : (string) $val;
++    }
++
++    private function trans(string $id): string
+     {
+-        return array_map(fn ($v): string => $v === null ? '' : (string) $v, $row);
++        return $this->translator->trans($this->translationDomain . '.' . $id, [], $this->translationDomain);
+     }
+ }
+diff --git a/src/Application/Export/SubmissionFlattener.php b/src/Application/Export/SubmissionFlattener.php
+deleted file mode 100644
+index f80062a..0000000
+--- a/src/Application/Export/SubmissionFlattener.php
++++ /dev/null
+@@ -1,156 +0,0 @@
+-<?php
+-
+-declare(strict_types=1);
+-
+-namespace Yiggle\FormWizardBundle\Application\Export;
+-
+-final class SubmissionFlattener
+-{
+-    /**
+-     * @param array<string, mixed> $data
+-     * @return list<array<string, string>>
+-     */
+-    public function flattenToRows(array $data, string $prefix = ''): array
+-    {
+-        $data = $this->normalize($data);
+-
+-        /** @var array<string, string> $scalars */
+-        $scalars = [];
+-
+-        /** @var array<string, array<string, mixed>> $objects */
+-        $objects = [];
+-
+-        /** @var array<string, list<mixed>> $repeatables */
+-        $repeatables = [];
+-
+-        foreach ($data as $key => $value) {
+-            $path = $prefix === '' ? (string) $key : $prefix . '.' . (string) $key;
+-
+-            if ($this->isScalarLike($value)) {
+-                $scalars[$path] = $this->scalarToCell($value);
+-                continue;
+-            }
+-
+-            if (is_array($value) && $this->isRepeatableList($value)) {
+-                /** @var list<mixed> $value */
+-                $repeatables[$path] = $value;
+-                continue;
+-            }
+-
+-            if (is_array($value)) {
+-                /** @var array<string, mixed> $value */
+-                $objects[$path] = $value;
+-                continue;
+-            }
+-
+-            $scalars[$path] = $this->scalarToCell($value);
+-        }
+-
+-        /** @var list<array<string, string>> $rows */
+-        $rows = [$scalars];
+-
+-        foreach ($objects as $objPath => $obj) {
+-            $objRows = $this->flattenToRows($obj, $objPath);
+-            $rows = $this->mergeRowSets($rows, $objRows);
+-        }
+-
+-        foreach ($repeatables as $repPath => $list) {
+-            /** @var list<array<string, string>> $repRows */
+-            $repRows = [];
+-
+-            if ($list === []) {
+-                continue;
+-            }
+-
+-            foreach ($list as $item) {
+-                if (! is_array($item)) {
+-                    $repRows[] = [
+-                        $repPath => $this->scalarToCell($item),
+-                    ];
+-                    continue;
+-                }
+-
+-                /** @var array<string, mixed> $item */
+-                $repRowsForItem = $this->flattenToRows($item, $repPath);
+-                foreach ($repRowsForItem as $r) {
+-                    $repRows[] = $r;
+-                }
+-            }
+-
+-            $rows = $this->mergeRowSets($rows, $repRows);
+-        }
+-
+-        return $rows;
+-    }
+-
+-    /**
+-     * @param array<string, mixed> $data
+-     * @return array<string, mixed>
+-     */
+-    private function normalize(array $data): array
+-    {
+-        return $data;
+-    }
+-
+-    /**
+-     * @param array<mixed> $value
+-     */
+-    private function isRepeatableList(array $value): bool
+-    {
+-        return array_is_list($value);
+-    }
+-
+-    private function isScalarLike(mixed $v): bool
+-    {
+-        return $v === null || is_scalar($v) || $v instanceof \Stringable;
+-    }
+-
+-    private function scalarToCell(mixed $v): string
+-    {
+-        if ($v === null) {
+-            return '';
+-        }
+-
+-        if ($v instanceof \DateTimeInterface) {
+-            return $v->format(\DateTimeInterface::ATOM);
+-        }
+-
+-        if (is_bool($v)) {
+-            return $v ? '1' : '0';
+-        }
+-
+-        if (is_scalar($v)) {
+-            return (string) $v;
+-        }
+-
+-        if ($v instanceof \Stringable) {
+-            return (string) $v;
+-        }
+-
+-        return json_encode($v, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '';
+-    }
+-
+-    /**
+-     * @param list<array<string, string>> $a
+-     * @param list<array<string, string>> $b
+-     * @return list<array<string, string>>
+-     */
+-    private function mergeRowSets(array $a, array $b): array
+-    {
+-        if ($a === []) {
+-            return $b;
+-        }
+-        if ($b === []) {
+-            return $a;
+-        }
+-
+-        $out = [];
+-        foreach ($a as $ra) {
+-            foreach ($b as $rb) {
+-                $out[] = $ra + $rb;
+-            }
+-        }
+-
+-        return $out;
+-    }
+-}
+diff --git a/src/Application/MessageHandler/ProcessSubmissionHandler.php b/src/Application/MessageHandler/ProcessSubmissionHandler.php
+index 2d95814..627e6ce 100644
+--- a/src/Application/MessageHandler/ProcessSubmissionHandler.php
++++ b/src/Application/MessageHandler/ProcessSubmissionHandler.php
+@@ -5,16 +5,20 @@ declare(strict_types=1);
+ namespace Yiggle\FormWizardBundle\Application\MessageHandler;
+ 
+ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
++use Yiggle\FormWizardBundle\Application\Contract\NotificationDispatcherInterface;
+ use Yiggle\FormWizardBundle\Application\Contract\WizardSubmissionRepositoryInterface;
+-use Yiggle\FormWizardBundle\Application\Service\NotificationService;
+ use Yiggle\FormWizardBundle\Message\ProcessSubmission;
+ 
++/**
++ * @internal Messenger handler responsible for processing submissions asynchronously.
++ *           This handler is not intended as a public extension point.
++ */
+ #[AsMessageHandler]
+ final readonly class ProcessSubmissionHandler
+ {
+     public function __construct(
+         private WizardSubmissionRepositoryInterface $submissions,
+-        private NotificationService $notifications,
++        private NotificationDispatcherInterface $notifications,
+     ) {
+     }
+ 
+diff --git a/src/Application/Payment/PaymentProviderRegistry.php b/src/Application/Payment/PaymentProviderRegistry.php
+index e9753b4..5716084 100644
+--- a/src/Application/Payment/PaymentProviderRegistry.php
++++ b/src/Application/Payment/PaymentProviderRegistry.php
+@@ -7,6 +7,9 @@ namespace Yiggle\FormWizardBundle\Application\Payment;
+ use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
+ use Yiggle\FormWizardBundle\Domain\Contract\Payment\PaymentProviderInterface;
+ 
++/**
++ * @internal Internal registry used to resolve configured payment providers.
++ */
+ final class PaymentProviderRegistry implements PaymentProviderRegistryInterface
+ {
+     /**
+diff --git a/src/Application/Security/ReturnUrlService.php b/src/Application/Security/ReturnUrlService.php
+index c0b3b7e..9b300c6 100644
+--- a/src/Application/Security/ReturnUrlService.php
++++ b/src/Application/Security/ReturnUrlService.php
+@@ -8,6 +8,10 @@ use Psr\Log\LoggerInterface;
+ use Symfony\Component\HttpFoundation\Request;
+ use Symfony\Component\HttpFoundation\UriSigner;
+ 
++/**
++ * @internal Utility service for generating signed return URLs for payment providers.
++ *           Not intended for public extension.
++ */
+ final readonly class ReturnUrlService implements ReturnUrlServiceInterface
+ {
+     public function __construct(
+diff --git a/src/Application/Service/NotificationService.php b/src/Application/Service/NotificationService.php
+index cc08fe0..d3ded2c 100644
+--- a/src/Application/Service/NotificationService.php
++++ b/src/Application/Service/NotificationService.php
+@@ -5,11 +5,16 @@ declare(strict_types=1);
+ namespace Yiggle\FormWizardBundle\Application\Service;
+ 
+ use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
++use Yiggle\FormWizardBundle\Application\Contract\NotificationDispatcherInterface;
+ use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardFormInterface;
+ use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardSubmissionInterface;
+ use Yiggle\FormWizardBundle\Domain\Contract\WizardNotifierInterface;
+ 
+-final readonly class NotificationService
++/**
++ * @internal Dispatches notification channels after a submission is processed.
++ *           This service is an internal coordination layer.
++ */
++final readonly class NotificationService implements NotificationDispatcherInterface
+ {
+     /**
+      * @param iterable<WizardNotifierInterface> $notifiers
+diff --git a/src/Application/Service/PaymentStatusProcessor.php b/src/Application/Service/PaymentStatusProcessor.php
+index 6a5fbb8..449606f 100644
+--- a/src/Application/Service/PaymentStatusProcessor.php
++++ b/src/Application/Service/PaymentStatusProcessor.php
+@@ -12,6 +12,10 @@ use Yiggle\FormWizardBundle\Application\Payment\PaymentProviderRegistryInterface
+ use Yiggle\FormWizardBundle\Domain\Payment\PaymentStatus;
+ use Yiggle\FormWizardBundle\Message\ProcessSubmission;
+ 
++/**
++ * @internal Handles synchronization of payment status updates and triggers follow-up
++ *           processing. This service is internal to the bundle.
++ */
+ final readonly class PaymentStatusProcessor
+ {
+     public function __construct(
+diff --git a/src/Application/Service/PriceCalculator.php b/src/Application/Service/PriceCalculator.php
+index dc993c4..0c7dc45 100644
+--- a/src/Application/Service/PriceCalculator.php
++++ b/src/Application/Service/PriceCalculator.php
+@@ -8,6 +8,7 @@ use Yiggle\FormWizardBundle\Domain\Contract\FieldType\PriceAwareFieldTypeHandler
+ use Yiggle\FormWizardBundle\Domain\Contract\FieldType\ReceiptAwareFieldTypeHandlerInterface;
+ use Yiggle\FormWizardBundle\Domain\Contract\FieldType\WizardFieldTypeRegistryInterface;
+ use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardFormInterface;
++use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardReceiptInterface;
+ use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardStepFieldInterface;
+ use Yiggle\FormWizardBundle\Domain\Model\ReceiptLine;
+ use Yiggle\FormWizardBundle\Domain\Model\WizardReceipt;
+@@ -15,6 +16,8 @@ use Yiggle\FormWizardBundle\Support\Money\ConvertsMoney;
+ use Yiggle\FormWizardBundle\Support\PHPStan\Types;
+ 
+ /**
++ * @internal Calculates wizard pricing during submission processing.
++ *           This class is internal to the bundle.
+  * @phpstan-import-type Config from Types
+  */
+ final readonly class PriceCalculator implements PriceCalculatorInterface
+@@ -26,7 +29,7 @@ final readonly class PriceCalculator implements PriceCalculatorInterface
+     ) {
+     }
+ 
+-    public function getReceipt(WizardFormInterface $form, array $submittedData): WizardReceipt
++    public function getReceipt(WizardFormInterface $form, array $submittedData): WizardReceiptInterface
+     {
+         $lines = [];
+         $totalCents = $this->eurosToCents($form->getFixedAmount());
+diff --git a/src/Application/Service/PriceCalculatorInterface.php b/src/Application/Service/PriceCalculatorInterface.php
+index 208b801..0e774ed 100644
+--- a/src/Application/Service/PriceCalculatorInterface.php
++++ b/src/Application/Service/PriceCalculatorInterface.php
+@@ -5,7 +5,7 @@ declare(strict_types=1);
+ namespace Yiggle\FormWizardBundle\Application\Service;
+ 
+ use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardFormInterface;
+-use Yiggle\FormWizardBundle\Domain\Model\WizardReceipt;
++use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardReceiptInterface;
+ use Yiggle\FormWizardBundle\Support\PHPStan\Types;
+ 
+ /**
+@@ -17,5 +17,5 @@ interface PriceCalculatorInterface
+     /**
+      * @param SubmittedData $submittedData
+      */
+-    public function getReceipt(WizardFormInterface $form, array $submittedData): WizardReceipt;
++    public function getReceipt(WizardFormInterface $form, array $submittedData): WizardReceiptInterface;
+ }
+diff --git a/src/Application/Service/ReceiptResolver.php b/src/Application/Service/ReceiptResolver.php
+index 7b5aeed..d796bd1 100644
+--- a/src/Application/Service/ReceiptResolver.php
++++ b/src/Application/Service/ReceiptResolver.php
+@@ -7,10 +7,12 @@ namespace Yiggle\FormWizardBundle\Application\Service;
+ use Symfony\Component\Form\Flow\FormFlowInterface;
+ use Yiggle\FormWizardBundle\Application\Data\WizardFlowData;
+ use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardFormInterface;
+-use Yiggle\FormWizardBundle\Domain\Model\WizardReceipt;
++use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardReceiptInterface;
+ use Yiggle\FormWizardBundle\Support\PHPStan\Types;
+ 
+ /**
++ * @internal Resolves receipt models for completed submissions.
++ *           This is an internal helper service.
+  * @phpstan-import-type SubmittedData from Types
+  */
+ final readonly class ReceiptResolver
+@@ -20,7 +22,7 @@ final readonly class ReceiptResolver
+     ) {
+     }
+ 
+-    public function fromFlow(FormFlowInterface $flow, WizardFormInterface $wizard): WizardReceipt
++    public function fromFlow(FormFlowInterface $flow, WizardFormInterface $wizard): WizardReceiptInterface
+     {
+         $flowData = WizardFlowData::fromArray(
+             is_array($flow->getData()) ? $flow->getData() : []
+@@ -37,7 +39,7 @@ final readonly class ReceiptResolver
+         WizardFormInterface $wizard,
+         ?array $savedArray,
+         array $postData,
+-    ): WizardReceipt {
++    ): WizardReceiptInterface {
+         $flowData = WizardFlowData::fromArray(is_array($savedArray) ? $savedArray : []);
+         $flowData = $flowData->withMergedPostData($postData);
+ 
+diff --git a/src/Application/Service/WizardCompletionState.php b/src/Application/Service/WizardCompletionState.php
+index 4a6699e..665e9ef 100644
+--- a/src/Application/Service/WizardCompletionState.php
++++ b/src/Application/Service/WizardCompletionState.php
+@@ -5,8 +5,12 @@ declare(strict_types=1);
+ namespace Yiggle\FormWizardBundle\Application\Service;
+ 
+ use Symfony\Component\HttpFoundation\RequestStack;
+-use Yiggle\FormWizardBundle\Domain\Model\WizardReceipt;
++use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardReceiptInterface;
+ 
++/**
++ * @internal Stores temporary completion state between request transitions.
++ *           This implementation detail may change.
++ */
+ final readonly class WizardCompletionState
+ {
+     private const SESSION_PREFIX = 'fw_completed_';
+@@ -18,7 +22,7 @@ final readonly class WizardCompletionState
+     ) {
+     }
+ 
+-    public function markCompleted(string $wizardId, ?WizardReceipt $receipt = null): void
++    public function markCompleted(string $wizardId, ?WizardReceiptInterface $receipt = null): void
+     {
+         $session = $this->requestStack->getSession();
+         $session->set($this->key($wizardId), true);
+@@ -28,11 +32,11 @@ final readonly class WizardCompletionState
+         }
+     }
+ 
+-    public function getSummary(string $wizardId): ?WizardReceipt
++    public function getSummary(string $wizardId): ?WizardReceiptInterface
+     {
+         $data = $this->requestStack->getSession()->get($this->key($wizardId) . self::DATA_SUFFIX);
+ 
+-        return $data instanceof WizardReceipt ? $data : null;
++        return $data instanceof WizardReceiptInterface ? $data : null;
+     }
+ 
+     public function consume(string $wizardId): bool
+diff --git a/src/Application/Service/WizardManager.php b/src/Application/Service/WizardManager.php
+index f72985a..87daf6e 100644
+--- a/src/Application/Service/WizardManager.php
++++ b/src/Application/Service/WizardManager.php
+@@ -7,6 +7,8 @@ namespace Yiggle\FormWizardBundle\Application\Service;
+ use Symfony\Component\Messenger\MessageBusInterface;
+ use Yiggle\FormWizardBundle\Application\Contract\EventBusInterface;
+ use Yiggle\FormWizardBundle\Application\Contract\WizardCompletionInterface;
++use Yiggle\FormWizardBundle\Application\Contract\WizardPaymentInitiatorInterface;
++use Yiggle\FormWizardBundle\Application\Contract\WizardSubmissionCreatorInterface;
+ use Yiggle\FormWizardBundle\Application\Contract\WizardSubmissionRepositoryInterface;
+ use Yiggle\FormWizardBundle\Application\Data\WizardFlowData;
+ use Yiggle\FormWizardBundle\Application\Event\WizardPaymentFailedEvent;
+@@ -15,11 +17,16 @@ use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardFormInterface;
+ use Yiggle\FormWizardBundle\Domain\Payment\PaymentStatus;
+ use Yiggle\FormWizardBundle\Message\ProcessSubmission;
+ 
++/**
++ * @internal This class is part of the internal implementation of the FormWizard bundle
++ *           and is not considered a public extension point. It may change or be removed
++ *           without notice between minor versions.
++ */
+ final readonly class WizardManager implements WizardCompletionInterface
+ {
+     public function __construct(
+-        private WizardSubmissionCreator $submissionCreator,
+-        private WizardPaymentInitiator $paymentInitiator,
++        private WizardSubmissionCreatorInterface $submissionCreator,
++        private WizardPaymentInitiatorInterface $paymentInitiator,
+         private WizardSubmissionRepositoryInterface $submissionRepository,
+         private MessageBusInterface $bus,
+         private EventBusInterface $eventDispatcher,
+diff --git a/src/Application/Service/WizardPaymentInitiator.php b/src/Application/Service/WizardPaymentInitiator.php
+index 839cb82..d13017e 100644
+--- a/src/Application/Service/WizardPaymentInitiator.php
++++ b/src/Application/Service/WizardPaymentInitiator.php
+@@ -11,6 +11,10 @@ use Yiggle\FormWizardBundle\Application\Payment\PaymentProviderRegistryInterface
+ use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardFormInterface;
+ use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardSubmissionInterface;
+ 
++/**
++ * @internal Responsible for initiating payment flows. This class is an internal
++ *           orchestration service and not part of the public API.
++ */
+ final readonly class WizardPaymentInitiator
+ {
+     public function __construct(
+diff --git a/src/Application/Service/WizardSubmissionCreator.php b/src/Application/Service/WizardSubmissionCreator.php
+index d4f4443..1bcef8e 100644
+--- a/src/Application/Service/WizardSubmissionCreator.php
++++ b/src/Application/Service/WizardSubmissionCreator.php
+@@ -7,6 +7,7 @@ namespace Yiggle\FormWizardBundle\Application\Service;
+ use Symfony\Component\HttpFoundation\Request;
+ use Symfony\Component\HttpFoundation\RequestStack;
+ use Yiggle\FormWizardBundle\Application\Contract\EventBusInterface;
++use Yiggle\FormWizardBundle\Application\Contract\WizardSubmissionCreatorInterface;
+ use Yiggle\FormWizardBundle\Application\Contract\WizardSubmissionRepositoryInterface;
+ use Yiggle\FormWizardBundle\Application\Data\WizardFlowData;
+ use Yiggle\FormWizardBundle\Application\Event\WizardSubmissionCreatedEvent;
+@@ -17,7 +18,11 @@ use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardSubmissionInterface;
+ use Yiggle\FormWizardBundle\Domain\Payment\PaymentMode;
+ use Yiggle\FormWizardBundle\Domain\Payment\PaymentStatus;
+ 
+-final readonly class WizardSubmissionCreator
++/**
++ * @internal This service orchestrates creation of wizard submissions and is considered
++ *           an internal implementation detail of the bundle.
++ */
++final readonly class WizardSubmissionCreator implements WizardSubmissionCreatorInterface
+ {
+     public function __construct(
+         private RequestStack $requestStack,
+@@ -41,7 +46,7 @@ final readonly class WizardSubmissionCreator
+ 
+         $submission->setForm($wizard);
+         $submission->setData($data->steps);
+-        $submission->setTotalAmountCents($receipt->totalInCents);
++        $submission->setTotalAmountCents($receipt->getTotalCents());
+         $submission->setCurrency($currency);
+         $submission->setProvider($wizard->getPaymentProvider());
+ 
+diff --git a/src/Application/UseCase/CompleteWizard/CompleteWizard.php b/src/Application/UseCase/CompleteWizard/CompleteWizard.php
+index 16c61f8..3375720 100644
+--- a/src/Application/UseCase/CompleteWizard/CompleteWizard.php
++++ b/src/Application/UseCase/CompleteWizard/CompleteWizard.php
+@@ -6,6 +6,9 @@ namespace Yiggle\FormWizardBundle\Application\UseCase\CompleteWizard;
+ 
+ use Yiggle\FormWizardBundle\Application\Contract\WizardCompletionInterface;
+ 
++/**
++ * @internal
++ */
+ final readonly class CompleteWizard
+ {
+     public function __construct(
+diff --git a/src/Application/UseCase/CompleteWizard/CompleteWizardRequest.php b/src/Application/UseCase/CompleteWizard/CompleteWizardRequest.php
+index 055831a..d5b56b4 100644
+--- a/src/Application/UseCase/CompleteWizard/CompleteWizardRequest.php
++++ b/src/Application/UseCase/CompleteWizard/CompleteWizardRequest.php
+@@ -7,6 +7,9 @@ namespace Yiggle\FormWizardBundle\Application\UseCase\CompleteWizard;
+ use Yiggle\FormWizardBundle\Application\Data\WizardFlowData;
+ use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardFormInterface;
+ 
++/**
++ * @internal
++ */
+ final readonly class CompleteWizardRequest
+ {
+     public function __construct(
+diff --git a/src/Application/UseCase/CompleteWizard/CompleteWizardResult.php b/src/Application/UseCase/CompleteWizard/CompleteWizardResult.php
+index 5f16190..ebf74d3 100644
+--- a/src/Application/UseCase/CompleteWizard/CompleteWizardResult.php
++++ b/src/Application/UseCase/CompleteWizard/CompleteWizardResult.php
+@@ -4,6 +4,9 @@ declare(strict_types=1);
+ 
+ namespace Yiggle\FormWizardBundle\Application\UseCase\CompleteWizard;
+ 
++/**
++ * @interal
++ */
+ final readonly class CompleteWizardResult
+ {
+     public function __construct(
+diff --git a/src/Domain/Model/WizardReceipt.php b/src/Domain/Model/WizardReceipt.php
+index 200cc25..1b87495 100644
+--- a/src/Domain/Model/WizardReceipt.php
++++ b/src/Domain/Model/WizardReceipt.php
+@@ -5,8 +5,9 @@ declare(strict_types=1);
+ namespace Yiggle\FormWizardBundle\Domain\Model;
+ 
+ use Symfony\Component\Validator\Constraints as Assert;
++use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardReceiptInterface;
+ 
+-final readonly class WizardReceipt
++final readonly class WizardReceipt implements WizardReceiptInterface
+ {
+     public function __construct(
+         /**
+@@ -48,4 +49,9 @@ final readonly class WizardReceipt
+         }
+         return $groups;
+     }
++
++    public function getLines(): array
++    {
++        return $this->lines;
++    }
+ }
+diff --git a/src/Infrastructure/DataStorage/MergingSessionDataStorage.php b/src/Infrastructure/DataStorage/MergingSessionDataStorage.php
+index 5a5cd9d..c994f7d 100644
+--- a/src/Infrastructure/DataStorage/MergingSessionDataStorage.php
++++ b/src/Infrastructure/DataStorage/MergingSessionDataStorage.php
+@@ -7,6 +7,9 @@ namespace Yiggle\FormWizardBundle\Infrastructure\DataStorage;
+ use Symfony\Component\Form\Flow\DataStorage\DataStorageInterface;
+ use Symfony\Component\HttpFoundation\RequestStack;
+ 
++/**
++ * @internal Session storage implementation used internally by the wizard runtime.
++ */
+ final readonly class MergingSessionDataStorage implements DataStorageInterface
+ {
+     public function __construct(
+diff --git a/src/Infrastructure/Factory/WizardFieldFactory.php b/src/Infrastructure/Factory/WizardFieldFactory.php
+index 6cbb713..1a3894a 100644
+--- a/src/Infrastructure/Factory/WizardFieldFactory.php
++++ b/src/Infrastructure/Factory/WizardFieldFactory.php
+@@ -8,6 +8,9 @@ use Yiggle\FormWizardBundle\Domain\Contract\Factory\WizardFieldFactoryInterface;
+ use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardFieldInterface;
+ use Yiggle\FormWizardBundle\Domain\Entity\WizardField;
+ 
++/**
++ * @internal Doctrine factory used internally for entity creation.
++ */
+ final class WizardFieldFactory implements WizardFieldFactoryInterface
+ {
+     public function create(?string $uuid = null): WizardFieldInterface
+diff --git a/src/Infrastructure/Factory/WizardStepFactory.php b/src/Infrastructure/Factory/WizardStepFactory.php
+index 55c67b2..af4953c 100644
+--- a/src/Infrastructure/Factory/WizardStepFactory.php
++++ b/src/Infrastructure/Factory/WizardStepFactory.php
+@@ -8,6 +8,9 @@ use Yiggle\FormWizardBundle\Domain\Contract\Factory\WizardStepFactoryInterface;
+ use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardStepInterface;
+ use Yiggle\FormWizardBundle\Domain\Entity\WizardStep;
+ 
++/**
++ * @internal Factory responsible for constructing wizard steps from input.
++ */
+ final class WizardStepFactory implements WizardStepFactoryInterface
+ {
+     public function create(?string $uuid = null): WizardStepInterface
+diff --git a/src/Infrastructure/Factory/WizardStepFieldFactory.php b/src/Infrastructure/Factory/WizardStepFieldFactory.php
+index 3b6b967..aca80c3 100644
+--- a/src/Infrastructure/Factory/WizardStepFieldFactory.php
++++ b/src/Infrastructure/Factory/WizardStepFieldFactory.php
+@@ -10,6 +10,9 @@ use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardStepFieldInterface;
+ use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardStepInterface;
+ use Yiggle\FormWizardBundle\Domain\Entity\WizardStepField;
+ 
++/**
++ * @internal Internal factory for step field entities.
++ */
+ final class WizardStepFieldFactory implements WizardStepFieldFactoryInterface
+ {
+     public function create(
+diff --git a/src/Infrastructure/Factory/WizardSubmissionFactory.php b/src/Infrastructure/Factory/WizardSubmissionFactory.php
+index 77daa33..55289b4 100644
+--- a/src/Infrastructure/Factory/WizardSubmissionFactory.php
++++ b/src/Infrastructure/Factory/WizardSubmissionFactory.php
+@@ -8,6 +8,9 @@ use Yiggle\FormWizardBundle\Domain\Contract\Factory\WizardSubmissionFactoryInter
+ use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardSubmissionInterface;
+ use Yiggle\FormWizardBundle\Domain\Entity\WizardSubmission;
+ 
++/**
++ * @internal Factory responsible for building submission entities.
++ */
+ class WizardSubmissionFactory implements WizardSubmissionFactoryInterface
+ {
+     public function createNew(): WizardSubmissionInterface
+diff --git a/src/Infrastructure/FieldType/AbstractWizardFieldTypeHandler.php b/src/Infrastructure/FieldType/AbstractWizardFieldTypeHandler.php
+index 66108d9..0c2245c 100644
+--- a/src/Infrastructure/FieldType/AbstractWizardFieldTypeHandler.php
++++ b/src/Infrastructure/FieldType/AbstractWizardFieldTypeHandler.php
+@@ -7,6 +7,9 @@ namespace Yiggle\FormWizardBundle\Infrastructure\FieldType;
+ use Symfony\Component\Validator\Constraints as Assert;
+ use Yiggle\FormWizardBundle\Domain\Contract\FieldType\WizardFieldTypeHandlerInterface;
+ 
++/**
++ * @internal Base implementation for wizard field type handlers.
++ */
+ abstract class AbstractWizardFieldTypeHandler implements WizardFieldTypeHandlerInterface
+ {
+     #[\Override]
+diff --git a/src/Infrastructure/FieldType/AsWizardFieldType.php b/src/Infrastructure/FieldType/AsWizardFieldType.php
+index b8d931f..7ed5038 100644
+--- a/src/Infrastructure/FieldType/AsWizardFieldType.php
++++ b/src/Infrastructure/FieldType/AsWizardFieldType.php
+@@ -3,7 +3,9 @@
+ declare(strict_types=1);
+ 
+ namespace Yiggle\FormWizardBundle\Infrastructure\FieldType;
+-
++/**
++ * @interal
++ */
+ #[\Attribute(\Attribute::TARGET_CLASS)]
+ final class AsWizardFieldType
+ {
+diff --git a/src/Infrastructure/FieldType/Handler/CheckboxFieldTypeHandler.php b/src/Infrastructure/FieldType/Handler/CheckboxFieldTypeHandler.php
+index 6ac805e..c715518 100644
+--- a/src/Infrastructure/FieldType/Handler/CheckboxFieldTypeHandler.php
++++ b/src/Infrastructure/FieldType/Handler/CheckboxFieldTypeHandler.php
+@@ -8,7 +8,9 @@ use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
+ use Symfony\Component\Validator\Constraints\IsTrue;
+ use Yiggle\FormWizardBundle\Infrastructure\FieldType\AbstractWizardFieldTypeHandler;
+ use Yiggle\FormWizardBundle\Infrastructure\FieldType\AsWizardFieldType;
+-
++/**
++ * @internal Built-in field type handler.
++ */
+ #[AsWizardFieldType]
+ final class CheckboxFieldTypeHandler extends AbstractWizardFieldTypeHandler
+ {
+diff --git a/src/Infrastructure/FieldType/Handler/CheckboxWithPriceFieldTypeHandler.php b/src/Infrastructure/FieldType/Handler/CheckboxWithPriceFieldTypeHandler.php
+index 8107655..3e79f49 100644
+--- a/src/Infrastructure/FieldType/Handler/CheckboxWithPriceFieldTypeHandler.php
++++ b/src/Infrastructure/FieldType/Handler/CheckboxWithPriceFieldTypeHandler.php
+@@ -12,7 +12,9 @@ use Yiggle\FormWizardBundle\Domain\Contract\FieldType\ReceiptTriggeringFieldType
+ use Yiggle\FormWizardBundle\Infrastructure\FieldType\AbstractWizardFieldTypeHandler;
+ use Yiggle\FormWizardBundle\Infrastructure\FieldType\AsWizardFieldType;
+ use Yiggle\FormWizardBundle\Support\Money\ConvertsMoney;
+-
++/**
++ * @internal Built-in field type handler.
++ */
+ #[AsWizardFieldType]
+ final class CheckboxWithPriceFieldTypeHandler extends AbstractWizardFieldTypeHandler implements PriceAwareFieldTypeHandlerInterface, ReceiptTriggeringFieldTypeHandlerInterface
+ {
+diff --git a/src/Infrastructure/FieldType/Handler/ChoiceWithPriceFieldTypeHandler.php b/src/Infrastructure/FieldType/Handler/ChoiceWithPriceFieldTypeHandler.php
+index 872ad25..03612d8 100644
+--- a/src/Infrastructure/FieldType/Handler/ChoiceWithPriceFieldTypeHandler.php
++++ b/src/Infrastructure/FieldType/Handler/ChoiceWithPriceFieldTypeHandler.php
+@@ -11,7 +11,9 @@ use Yiggle\FormWizardBundle\Domain\Contract\FieldType\ReceiptTriggeringFieldType
+ use Yiggle\FormWizardBundle\Infrastructure\FieldType\AbstractWizardFieldTypeHandler;
+ use Yiggle\FormWizardBundle\Infrastructure\FieldType\AsWizardFieldType;
+ use Yiggle\FormWizardBundle\Support\Money\ConvertsMoney;
+-
++/**
++ * @internal Built-in field type handler.
++ */
+ #[AsWizardFieldType]
+ final class ChoiceWithPriceFieldTypeHandler extends AbstractWizardFieldTypeHandler implements PriceAwareFieldTypeHandlerInterface, ReceiptTriggeringFieldTypeHandlerInterface
+ {
+diff --git a/src/Infrastructure/FieldType/Handler/DateFieldTypeHandler.php b/src/Infrastructure/FieldType/Handler/DateFieldTypeHandler.php
+index a2ecaf6..b6b17c2 100644
+--- a/src/Infrastructure/FieldType/Handler/DateFieldTypeHandler.php
++++ b/src/Infrastructure/FieldType/Handler/DateFieldTypeHandler.php
+@@ -9,7 +9,9 @@ use Symfony\Component\Validator\Constraints as Assert;
+ use Symfony\Contracts\Translation\TranslatorInterface;
+ use Yiggle\FormWizardBundle\Infrastructure\FieldType\AbstractWizardFieldTypeHandler;
+ use Yiggle\FormWizardBundle\Infrastructure\FieldType\AsWizardFieldType;
+-
++/**
++ * @internal Built-in field type handler.
++ */
+ #[AsWizardFieldType]
+ final class DateFieldTypeHandler extends AbstractWizardFieldTypeHandler
+ {
+diff --git a/src/Infrastructure/FieldType/Handler/EmailFieldTypeHandler.php b/src/Infrastructure/FieldType/Handler/EmailFieldTypeHandler.php
+index 3840092..c987eb7 100644
+--- a/src/Infrastructure/FieldType/Handler/EmailFieldTypeHandler.php
++++ b/src/Infrastructure/FieldType/Handler/EmailFieldTypeHandler.php
+@@ -9,7 +9,9 @@ use Symfony\Component\Validator\Constraints as Assert;
+ use Symfony\Contracts\Translation\TranslatorInterface;
+ use Yiggle\FormWizardBundle\Infrastructure\FieldType\AbstractWizardFieldTypeHandler;
+ use Yiggle\FormWizardBundle\Infrastructure\FieldType\AsWizardFieldType;
+-
++/**
++ * @internal Built-in field type handler.
++ */
+ #[AsWizardFieldType]
+ final class EmailFieldTypeHandler extends AbstractWizardFieldTypeHandler
+ {
+diff --git a/src/Infrastructure/FieldType/Handler/IntegerFieldTypeHandler.php b/src/Infrastructure/FieldType/Handler/IntegerFieldTypeHandler.php
+index 570862b..aaa80c2 100644
+--- a/src/Infrastructure/FieldType/Handler/IntegerFieldTypeHandler.php
++++ b/src/Infrastructure/FieldType/Handler/IntegerFieldTypeHandler.php
+@@ -9,7 +9,9 @@ use Symfony\Component\Validator\Constraints as Assert;
+ use Symfony\Contracts\Translation\TranslatorInterface;
+ use Yiggle\FormWizardBundle\Infrastructure\FieldType\AbstractWizardFieldTypeHandler;
+ use Yiggle\FormWizardBundle\Infrastructure\FieldType\AsWizardFieldType;
+-
++/**
++ * @internal Built-in field type handler.
++ */
+ #[AsWizardFieldType]
+ final class IntegerFieldTypeHandler extends AbstractWizardFieldTypeHandler
+ {
+diff --git a/src/Infrastructure/FieldType/Handler/NumberFieldTypeHandler.php b/src/Infrastructure/FieldType/Handler/NumberFieldTypeHandler.php
+index 01d26f6..1472b03 100644
+--- a/src/Infrastructure/FieldType/Handler/NumberFieldTypeHandler.php
++++ b/src/Infrastructure/FieldType/Handler/NumberFieldTypeHandler.php
+@@ -9,7 +9,9 @@ use Symfony\Component\Validator\Constraints as Assert;
+ use Symfony\Contracts\Translation\TranslatorInterface;
+ use Yiggle\FormWizardBundle\Infrastructure\FieldType\AbstractWizardFieldTypeHandler;
+ use Yiggle\FormWizardBundle\Infrastructure\FieldType\AsWizardFieldType;
+-
++/**
++ * @internal Built-in field type handler.
++ */
+ #[AsWizardFieldType]
+ final class NumberFieldTypeHandler extends AbstractWizardFieldTypeHandler
+ {
+diff --git a/src/Infrastructure/FieldType/Handler/RadioWithPriceFieldTypeHandler.php b/src/Infrastructure/FieldType/Handler/RadioWithPriceFieldTypeHandler.php
+index 6e7ac5a..522bf56 100644
+--- a/src/Infrastructure/FieldType/Handler/RadioWithPriceFieldTypeHandler.php
++++ b/src/Infrastructure/FieldType/Handler/RadioWithPriceFieldTypeHandler.php
+@@ -11,7 +11,9 @@ use Yiggle\FormWizardBundle\Domain\Contract\FieldType\ReceiptTriggeringFieldType
+ use Yiggle\FormWizardBundle\Infrastructure\FieldType\AbstractWizardFieldTypeHandler;
+ use Yiggle\FormWizardBundle\Infrastructure\FieldType\AsWizardFieldType;
+ use Yiggle\FormWizardBundle\Support\Money\ConvertsMoney;
+-
++/**
++ * @internal Built-in field type handler.
++ */
+ #[AsWizardFieldType]
+ final class RadioWithPriceFieldTypeHandler extends AbstractWizardFieldTypeHandler implements PriceAwareFieldTypeHandlerInterface, ReceiptTriggeringFieldTypeHandlerInterface
+ {
+diff --git a/src/Infrastructure/FieldType/Handler/RepeatableGroupFieldTypeHandler.php b/src/Infrastructure/FieldType/Handler/RepeatableGroupFieldTypeHandler.php
+index 7b4c73e..2b82627 100644
+--- a/src/Infrastructure/FieldType/Handler/RepeatableGroupFieldTypeHandler.php
++++ b/src/Infrastructure/FieldType/Handler/RepeatableGroupFieldTypeHandler.php
+@@ -8,7 +8,9 @@ use Yiggle\FormWizardBundle\Infrastructure\FieldType\AbstractWizardFieldTypeHand
+ use Yiggle\FormWizardBundle\Infrastructure\FieldType\AsWizardFieldType;
+ use Yiggle\FormWizardBundle\Infrastructure\FieldType\WizardFieldTypeRegistry;
+ use Yiggle\FormWizardBundle\Presentation\Web\Form\Type\WizardRepeatableGroupType;
+-
++/**
++ * @internal Built-in field type handler.
++ */
+ #[AsWizardFieldType]
+ final class RepeatableGroupFieldTypeHandler extends AbstractWizardFieldTypeHandler
+ {
+diff --git a/src/Infrastructure/FieldType/Handler/TelFieldTypeHandler.php b/src/Infrastructure/FieldType/Handler/TelFieldTypeHandler.php
+index 7030f9a..5418b8c 100644
+--- a/src/Infrastructure/FieldType/Handler/TelFieldTypeHandler.php
++++ b/src/Infrastructure/FieldType/Handler/TelFieldTypeHandler.php
+@@ -9,7 +9,9 @@ use Symfony\Component\Validator\Constraints as Assert;
+ use Symfony\Contracts\Translation\TranslatorInterface;
+ use Yiggle\FormWizardBundle\Infrastructure\FieldType\AbstractWizardFieldTypeHandler;
+ use Yiggle\FormWizardBundle\Infrastructure\FieldType\AsWizardFieldType;
+-
++/**
++ * @internal Built-in field type handler.
++ */
+ #[AsWizardFieldType]
+ final class TelFieldTypeHandler extends AbstractWizardFieldTypeHandler
+ {
+diff --git a/src/Infrastructure/FieldType/Handler/TextFieldTypeHandler.php b/src/Infrastructure/FieldType/Handler/TextFieldTypeHandler.php
+index c6e3c3f..4c9dde7 100644
+--- a/src/Infrastructure/FieldType/Handler/TextFieldTypeHandler.php
++++ b/src/Infrastructure/FieldType/Handler/TextFieldTypeHandler.php
+@@ -7,7 +7,9 @@ namespace Yiggle\FormWizardBundle\Infrastructure\FieldType\Handler;
+ use Symfony\Component\Form\Extension\Core\Type\TextType;
+ use Yiggle\FormWizardBundle\Infrastructure\FieldType\AbstractWizardFieldTypeHandler;
+ use Yiggle\FormWizardBundle\Infrastructure\FieldType\AsWizardFieldType;
+-
++/**
++ * @internal Built-in field type handler.
++ */
+ #[AsWizardFieldType]
+ final class TextFieldTypeHandler extends AbstractWizardFieldTypeHandler
+ {
+diff --git a/src/Infrastructure/FieldType/Handler/TextareaFieldTypeHandler.php b/src/Infrastructure/FieldType/Handler/TextareaFieldTypeHandler.php
+index b56b3b0..1702ac2 100644
+--- a/src/Infrastructure/FieldType/Handler/TextareaFieldTypeHandler.php
++++ b/src/Infrastructure/FieldType/Handler/TextareaFieldTypeHandler.php
+@@ -7,7 +7,9 @@ namespace Yiggle\FormWizardBundle\Infrastructure\FieldType\Handler;
+ use Symfony\Component\Form\Extension\Core\Type\TextareaType;
+ use Yiggle\FormWizardBundle\Infrastructure\FieldType\AbstractWizardFieldTypeHandler;
+ use Yiggle\FormWizardBundle\Infrastructure\FieldType\AsWizardFieldType;
+-
++/**
++ * @internal Built-in field type handler.
++ */
+ #[AsWizardFieldType]
+ final class TextareaFieldTypeHandler extends AbstractWizardFieldTypeHandler
+ {
+diff --git a/src/Infrastructure/FieldType/WizardFieldTypeRegistry.php b/src/Infrastructure/FieldType/WizardFieldTypeRegistry.php
+index d2b98d2..bd37fc6 100644
+--- a/src/Infrastructure/FieldType/WizardFieldTypeRegistry.php
++++ b/src/Infrastructure/FieldType/WizardFieldTypeRegistry.php
+@@ -8,6 +8,9 @@ use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
+ use Yiggle\FormWizardBundle\Domain\Contract\FieldType\WizardFieldTypeHandlerInterface;
+ use Yiggle\FormWizardBundle\Domain\Contract\FieldType\WizardFieldTypeRegistryInterface;
+ 
++/**
++ * @internal Registry resolving field type handlers.
++ */
+ final class WizardFieldTypeRegistry implements WizardFieldTypeRegistryInterface
+ {
+     /**
+diff --git a/src/Infrastructure/Notification/EmailNotifier.php b/src/Infrastructure/Notification/EmailNotifier.php
+index e792a92..87ce028 100644
+--- a/src/Infrastructure/Notification/EmailNotifier.php
++++ b/src/Infrastructure/Notification/EmailNotifier.php
+@@ -14,6 +14,9 @@ use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardFormInterface;
+ use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardSubmissionInterface;
+ use Yiggle\FormWizardBundle\Domain\Contract\WizardNotifierInterface;
+ 
++/**
++ * @internal Default email notification implementation.
++ */
+ #[AutoconfigureTag('yiggle_form_wizard.wizard_notifier')]
+ final readonly class EmailNotifier implements WizardNotifierInterface
+ {
+diff --git a/src/Infrastructure/Payment/Attribute/AsPaymentProvider.php b/src/Infrastructure/Payment/Attribute/AsPaymentProvider.php
+index 8615c4e..012517a 100644
+--- a/src/Infrastructure/Payment/Attribute/AsPaymentProvider.php
++++ b/src/Infrastructure/Payment/Attribute/AsPaymentProvider.php
+@@ -6,7 +6,9 @@ namespace Yiggle\FormWizardBundle\Infrastructure\Payment\Attribute;
+ 
+ use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
+ 
+-// Tag name matches PaymentProviderRegistry (and config/services.php) so providers can be discovered consistently.
++/**
++ * @internal
++ */
+ #[AutoconfigureTag('yiggle_form_wizard.payment_provider')]
+ #[\Attribute(\Attribute::TARGET_CLASS)]
+ final class AsPaymentProvider
+diff --git a/src/Infrastructure/Payment/Mollie/MollieClientFactory.php b/src/Infrastructure/Payment/Mollie/MollieClientFactory.php
+index b8c27a6..e1e2119 100644
+--- a/src/Infrastructure/Payment/Mollie/MollieClientFactory.php
++++ b/src/Infrastructure/Payment/Mollie/MollieClientFactory.php
+@@ -7,6 +7,9 @@ namespace Yiggle\FormWizardBundle\Infrastructure\Payment\Mollie;
+ use Mollie\Api\Exceptions\ApiException;
+ use Mollie\Api\MollieApiClient;
+ 
++/**
++ * @internal Factory creating Mollie API clients for the payment provider integration.
++ */
+ final class MollieClientFactory
+ {
+     /**
+diff --git a/src/Infrastructure/Payment/Provider/MollieProvider.php b/src/Infrastructure/Payment/Provider/MollieProvider.php
+index 9723f0a..3158e22 100644
+--- a/src/Infrastructure/Payment/Provider/MollieProvider.php
++++ b/src/Infrastructure/Payment/Provider/MollieProvider.php
+@@ -19,6 +19,9 @@ use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardSubmissionInterface;
+ use Yiggle\FormWizardBundle\Domain\Contract\Payment\PaymentProviderInterface;
+ use Yiggle\FormWizardBundle\Domain\Payment\PaymentStatus;
+ 
++/**
++ * @internal Built-in Mollie payment provider implementation.
++ */
+ #[AutoconfigureTag('yiggle_form_wizard.payment_provider', [
+     'alias' => 'mollie',
+ ])]
+@@ -133,8 +136,6 @@ final readonly class MollieProvider implements PaymentProviderInterface
+             $submission->getForm()->getUuid(),
+         );
+ 
+-        dump($returnUrl, $signed);
+-
+         return $signed;
+     }
+ 
+diff --git a/src/Infrastructure/Persistence/Doctrine/Repository/WizardFieldRepository.php b/src/Infrastructure/Persistence/Doctrine/Repository/WizardFieldRepository.php
+index 5433e77..6faff61 100644
+--- a/src/Infrastructure/Persistence/Doctrine/Repository/WizardFieldRepository.php
++++ b/src/Infrastructure/Persistence/Doctrine/Repository/WizardFieldRepository.php
+@@ -10,6 +10,7 @@ use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardFieldInterface;
+ use Yiggle\FormWizardBundle\Domain\Entity\WizardField;
+ 
+ /**
++ * @internal
+  * @extends ServiceEntityRepository<WizardField>
+  */
+ final class WizardFieldRepository extends ServiceEntityRepository
+diff --git a/src/Infrastructure/Persistence/Doctrine/Repository/WizardFormRepository.php b/src/Infrastructure/Persistence/Doctrine/Repository/WizardFormRepository.php
+index 09564a2..fd912ea 100644
+--- a/src/Infrastructure/Persistence/Doctrine/Repository/WizardFormRepository.php
++++ b/src/Infrastructure/Persistence/Doctrine/Repository/WizardFormRepository.php
+@@ -11,6 +11,7 @@ use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardFormInterface;
+ use Yiggle\FormWizardBundle\Domain\Entity\WizardForm;
+ 
+ /**
++ * @internal
+  * @extends ServiceEntityRepository<WizardForm>
+  */
+ final class WizardFormRepository extends ServiceEntityRepository implements WizardFormRepositoryInterface
+diff --git a/src/Infrastructure/Persistence/Doctrine/Repository/WizardStepFieldRepository.php b/src/Infrastructure/Persistence/Doctrine/Repository/WizardStepFieldRepository.php
+index 499c85b..6ed6305 100644
+--- a/src/Infrastructure/Persistence/Doctrine/Repository/WizardStepFieldRepository.php
++++ b/src/Infrastructure/Persistence/Doctrine/Repository/WizardStepFieldRepository.php
+@@ -10,6 +10,7 @@ use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardStepFieldInterface;
+ use Yiggle\FormWizardBundle\Domain\Entity\WizardStepField;
+ 
+ /**
++ * @internal
+  * @extends ServiceEntityRepository<WizardStepField>
+  */
+ final class WizardStepFieldRepository extends ServiceEntityRepository
+diff --git a/src/Infrastructure/Persistence/Doctrine/Repository/WizardStepRepository.php b/src/Infrastructure/Persistence/Doctrine/Repository/WizardStepRepository.php
+index ee4d0a3..24b24e9 100644
+--- a/src/Infrastructure/Persistence/Doctrine/Repository/WizardStepRepository.php
++++ b/src/Infrastructure/Persistence/Doctrine/Repository/WizardStepRepository.php
+@@ -10,6 +10,7 @@ use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardStepInterface;
+ use Yiggle\FormWizardBundle\Domain\Entity\WizardStep;
+ 
+ /**
++ * @internal
+  * @extends ServiceEntityRepository<WizardStep>
+  */
+ final class WizardStepRepository extends ServiceEntityRepository
+diff --git a/src/Infrastructure/Persistence/Doctrine/Repository/WizardSubmissionRepository.php b/src/Infrastructure/Persistence/Doctrine/Repository/WizardSubmissionRepository.php
+index 3020537..51468ac 100644
+--- a/src/Infrastructure/Persistence/Doctrine/Repository/WizardSubmissionRepository.php
++++ b/src/Infrastructure/Persistence/Doctrine/Repository/WizardSubmissionRepository.php
+@@ -11,6 +11,7 @@ use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardSubmissionInterface;
+ use Yiggle\FormWizardBundle\Domain\Entity\WizardSubmission;
+ 
+ /**
++ * @internal
+  * @extends ServiceEntityRepository<WizardSubmission>
+  */
+ final class WizardSubmissionRepository extends ServiceEntityRepository implements WizardSubmissionRepositoryInterface
+diff --git a/src/Infrastructure/Sulu/Admin/Controller/WizardSubmissionExportController.php b/src/Infrastructure/Sulu/Admin/Controller/WizardSubmissionExportController.php
+index b6cfe4c..3b8a5e0 100644
+--- a/src/Infrastructure/Sulu/Admin/Controller/WizardSubmissionExportController.php
++++ b/src/Infrastructure/Sulu/Admin/Controller/WizardSubmissionExportController.php
+@@ -4,12 +4,11 @@ declare(strict_types=1);
+ 
+ namespace Yiggle\FormWizardBundle\Infrastructure\Sulu\Admin\Controller;
+ 
+-use Http\Discovery\Exception\NotFoundException;
+ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+ use Symfony\Component\HttpFoundation\StreamedResponse;
++use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+ use Symfony\Component\Routing\Attribute\Route;
+ use Yiggle\FormWizardBundle\Application\Export\SubmissionCsvExporter;
+-use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardSubmissionInterface;
+ use Yiggle\FormWizardBundle\Infrastructure\Persistence\Doctrine\Repository\WizardFormRepository;
+ use Yiggle\FormWizardBundle\Infrastructure\Persistence\Doctrine\Repository\WizardSubmissionRepository;
+ 
+@@ -17,73 +16,46 @@ use Yiggle\FormWizardBundle\Infrastructure\Persistence\Doctrine\Repository\Wizar
+ final class WizardSubmissionExportController extends AbstractController
+ {
+     public function __construct(
+-        private readonly WizardFormRepository $forms,
+-        private readonly WizardSubmissionRepository $submissions,
+-        private readonly SubmissionCsvExporter $exporter,
++        private WizardFormRepository $forms,
++        private WizardSubmissionRepository $submissions,
++        private SubmissionCsvExporter $exporter,
+     ) {
+     }
+ 
+     public function __invoke(string $id): StreamedResponse
+     {
+-        $form = $this->forms->find($id) ?? throw new NotFoundException();
+-
+-        $submissions = $this->materializeSubmissions($form->getUuid());
+-
+-        $headers = $this->exporter->buildHeaders($submissions);
+-
+-        $filename = sprintf('wizard_%s_submissions.csv', $form->getUuid());
+-
+-        $response = new StreamedResponse(function () use ($headers, $submissions): void {
+-            $out = fopen('php://output', 'wb');
+-
+-            if (! is_resource($out)) {
+-                return;
++        $form = $this->forms->find($id) ?? throw new NotFoundHttpException();
++        $submissions = $this->submissions->iterateByFormUuid($form->getUuid());
++        $headers = $this->exporter->buildHeaders($form);
++
++        $response = new StreamedResponse(function () use ($headers, $submissions, $form): void {
++            $handle = fopen('php://output', 'wb');
++            if (! is_resource($handle)) {
++                throw new \RuntimeException('Unable to open output stream for CSV export.');
+             }
+ 
+-            $delimiter = ';';
+-
+-            fwrite($out, "\xEF\xBB\xBF");
++            fwrite($handle, "\xEF\xBB\xBF");
+ 
+-            fputcsv($out, $headers, $delimiter);
++            $delimiter = ';';
++            fputcsv($handle, $headers, $delimiter);
+ 
+             foreach ($submissions as $submission) {
+-                foreach ($this->exporter->rowsForSubmission($submission) as $row) {
++                $rows = $this->exporter->rowsForSubmission($form, $submission);
++                foreach ($rows as $row) {
+                     $line = [];
+-                    foreach ($headers as $h) {
+-                        $line[] = $row[$h] ?? '';
++                    foreach ($headers as $header) {
++                        $line[] = $row[$header] ?? '';
+                     }
+-                    fputcsv($out, $line, $delimiter);
++                    fputcsv($handle, $line, $delimiter);
+                 }
+             }
+-
+-            fclose($out);
++            fclose($handle);
+         });
+ 
++        $filename = sprintf('export_%s_%s.csv', $form->getUuid(), date('Ymd'));
+         $response->headers->set('Content-Type', 'text/csv; charset=UTF-8');
+         $response->headers->set('Content-Disposition', 'attachment; filename="' . $filename . '"');
+ 
+         return $response;
+     }
+-
+-    /**
+-     * @return list<WizardSubmissionInterface>
+-     */
+-    private function materializeSubmissions(string $formUuid): array
+-    {
+-        $iterable = $this->iterateSubmissions($formUuid);
+-
+-        if (is_array($iterable)) {
+-            return array_values($iterable);
+-        }
+-
+-        return iterator_to_array($iterable, false);
+-    }
+-
+-    /**
+-     * @return iterable<WizardSubmissionInterface>
+-     */
+-    private function iterateSubmissions(string $formUuid): iterable
+-    {
+-        return $this->submissions->iterateByFormUuid($formUuid);
+-    }
+ }
+diff --git a/src/Infrastructure/Symfony/EventListener/WizardNotificationListener.php b/src/Infrastructure/Symfony/EventListener/WizardNotificationListener.php
+deleted file mode 100644
+index d4c1e6e..0000000
+--- a/src/Infrastructure/Symfony/EventListener/WizardNotificationListener.php
++++ /dev/null
+@@ -1,26 +0,0 @@
+-<?php
+-
+-declare(strict_types=1);
+-
+-namespace Yiggle\FormWizardBundle\Infrastructure\Symfony\EventListener;
+-
+-use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
+-use Yiggle\FormWizardBundle\Application\Event\WizardSubmissionCompletedEvent;
+-use Yiggle\FormWizardBundle\Application\Service\NotificationService;
+-
+-#[AsEventListener(event: WizardSubmissionCompletedEvent::class)]
+-final readonly class WizardNotificationListener
+-{
+-    public function __construct(
+-        private NotificationService $notifications,
+-    ) {
+-    }
+-
+-    public function __invoke(WizardSubmissionCompletedEvent $event): void
+-    {
+-        $this->notifications->dispatchNotifications(
+-            $event->wizard,
+-            $event->submission
+-        );
+-    }
+-}
+diff --git a/src/Infrastructure/Symfony/Serializer/WizardFieldDenormalizer.php b/src/Infrastructure/Symfony/Serializer/WizardFieldDenormalizer.php
+index e1bf814..479a43c 100644
+--- a/src/Infrastructure/Symfony/Serializer/WizardFieldDenormalizer.php
++++ b/src/Infrastructure/Symfony/Serializer/WizardFieldDenormalizer.php
+@@ -9,6 +9,9 @@ use Symfony\Component\Serializer\Normalizer\DenormalizerAwareTrait;
+ use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
+ use Yiggle\FormWizardBundle\Application\DTO\Admin\WizardStepFieldInput;
+ 
++/**
++ * @internal Serializer helper used by the Sulu admin integration.
++ */
+ final class WizardFieldDenormalizer implements DenormalizerInterface, DenormalizerAwareInterface
+ {
+     use DenormalizerAwareTrait;
+diff --git a/src/Infrastructure/Symfony/SymfonyEventBus.php b/src/Infrastructure/Symfony/SymfonyEventBus.php
+index 1973e4a..f7438cf 100644
+--- a/src/Infrastructure/Symfony/SymfonyEventBus.php
++++ b/src/Infrastructure/Symfony/SymfonyEventBus.php
+@@ -7,6 +7,9 @@ namespace Yiggle\FormWizardBundle\Infrastructure\Symfony;
+ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+ use Yiggle\FormWizardBundle\Application\Contract\EventBusInterface;
+ 
++/**
++ * @internal Symfony adapter used to dispatch domain/application events.
++ */
+ final readonly class SymfonyEventBus implements EventBusInterface
+ {
+     public function __construct(
+diff --git a/src/Presentation/Web/Controller/PaymentWebhookController.php b/src/Presentation/Web/Controller/PaymentWebhookController.php
+index 39187d4..2e9bd12 100644
+--- a/src/Presentation/Web/Controller/PaymentWebhookController.php
++++ b/src/Presentation/Web/Controller/PaymentWebhookController.php
+@@ -11,6 +11,9 @@ use Symfony\Component\HttpFoundation\Response;
+ use Symfony\Component\Routing\Attribute\Route;
+ use Yiggle\FormWizardBundle\Application\Service\PaymentStatusProcessor;
+ 
++/**
++ * @internal Controller handling payment provider webhooks.
++ */
+ final class PaymentWebhookController extends AbstractController
+ {
+     public function __construct(
+diff --git a/src/Presentation/Web/Controller/ReceiptPreviewController.php b/src/Presentation/Web/Controller/ReceiptPreviewController.php
+index a287c41..e7b60f5 100644
+--- a/src/Presentation/Web/Controller/ReceiptPreviewController.php
++++ b/src/Presentation/Web/Controller/ReceiptPreviewController.php
+@@ -12,6 +12,9 @@ use Symfony\UX\Turbo\TurboStreamResponse;
+ use Yiggle\FormWizardBundle\Application\Service\ReceiptResolver;
+ use Yiggle\FormWizardBundle\Infrastructure\Persistence\Doctrine\Repository\WizardFormRepository;
+ 
++/**
++ * @internal Messenger message used internally to trigger asynchronous submission processing.
++ */
+ #[Route('/_wizard/preview/{id}', name: 'fw_wizard_preview', methods: ['POST'])]
+ final class ReceiptPreviewController extends AbstractController
+ {
+diff --git a/src/Presentation/Web/Controller/WizardContentController.php b/src/Presentation/Web/Controller/WizardContentController.php
+index b593659..5b81cdf 100644
+--- a/src/Presentation/Web/Controller/WizardContentController.php
++++ b/src/Presentation/Web/Controller/WizardContentController.php
+@@ -12,6 +12,9 @@ use Symfony\Component\HttpFoundation\Response;
+ use Yiggle\FormWizardBundle\Presentation\Web\Service\WizardRuntime;
+ use Yiggle\FormWizardBundle\Presentation\Web\WizardMount\WizardMountResolverInterface;
+ 
++/**
++ * @internal Controller used by Sulu content rendering.
++ */
+ final class WizardContentController extends ContentController
+ {
+     public function __construct(
+diff --git a/src/Presentation/Web/Controller/WizardController.php b/src/Presentation/Web/Controller/WizardController.php
+index a38c94b..5f93601 100644
+--- a/src/Presentation/Web/Controller/WizardController.php
++++ b/src/Presentation/Web/Controller/WizardController.php
+@@ -10,6 +10,9 @@ use Symfony\Component\HttpFoundation\Response;
+ use Symfony\Component\Routing\Attribute\Route;
+ use Yiggle\FormWizardBundle\Presentation\Web\Service\WizardRuntime;
+ 
++/**
++ * @internal Controller responsible for rendering and processing wizard flows.
++ */
+ #[Route('/_wizard/{id}', name: 'fw_wizard', methods: ['GET', 'POST'])]
+ final class WizardController extends AbstractController
+ {
+diff --git a/src/Presentation/Web/EventSubscriber/WizardReturnListener.php b/src/Presentation/Web/EventSubscriber/WizardReturnListener.php
+index 909af63..b09fa39 100644
+--- a/src/Presentation/Web/EventSubscriber/WizardReturnListener.php
++++ b/src/Presentation/Web/EventSubscriber/WizardReturnListener.php
+@@ -11,13 +11,16 @@ use Symfony\Component\HttpKernel\Event\RequestEvent;
+ use Yiggle\FormWizardBundle\Application\Security\ReturnUrlServiceInterface;
+ use Yiggle\FormWizardBundle\Application\Service\WizardCompletionState;
+ 
++/**
++ * @internal Symfony event listener handling payment return redirects.
++ */
+ #[AsEventListener(event: RequestEvent::class, priority: 10)]
+-final class WizardReturnListener
++final readonly class WizardReturnListener
+ {
+     public function __construct(
+-        private readonly ReturnUrlServiceInterface $returnUrlService,
+-        private readonly WizardCompletionState $completionState,
+-        private readonly LoggerInterface $logger,
++        private ReturnUrlServiceInterface $returnUrlService,
++        private WizardCompletionState     $completionState,
++        private LoggerInterface           $logger,
+     ) {
+     }
+ 
+diff --git a/src/Presentation/Web/Service/WizardRuntime.php b/src/Presentation/Web/Service/WizardRuntime.php
+index c2aee1a..7fc0bab 100644
+--- a/src/Presentation/Web/Service/WizardRuntime.php
++++ b/src/Presentation/Web/Service/WizardRuntime.php
+@@ -18,15 +18,18 @@ use Yiggle\FormWizardBundle\Application\UseCase\CompleteWizard\CompleteWizard;
+ use Yiggle\FormWizardBundle\Application\UseCase\CompleteWizard\CompleteWizardRequest;
+ use Yiggle\FormWizardBundle\Presentation\Web\Form\Flow\WizardFlowType;
+ 
+-final class WizardRuntime
++/**
++ * @internal Runtime helper responsible for resolving wizard state during rendering.
++ */
++final readonly class WizardRuntime
+ {
+     public function __construct(
+-        private readonly FormFactoryInterface $formFactory,
+-        private readonly WizardFormRepositoryInterface $wizardFormRepository,
+-        private readonly ReceiptResolver $receiptResolver,
+-        private readonly CompleteWizard $completeWizard,
+-        private readonly WizardCompletionState $completionState,
+-        private readonly ReturnUrlServiceInterface $returnUrlService,
++        private FormFactoryInterface          $formFactory,
++        private WizardFormRepositoryInterface $wizardFormRepository,
++        private ReceiptResolver               $receiptResolver,
++        private CompleteWizard                $completeWizard,
++        private WizardCompletionState         $completionState,
++        private ReturnUrlServiceInterface     $returnUrlService,
+     ) {
+     }
+ 
+@@ -61,7 +64,7 @@ final class WizardRuntime
+         ])->handleRequest($request);
+ 
+         $receipt = $this->receiptResolver->fromFlow($flow, $wizard);
+-        $showReceipt = \count($receipt->lines) > 0;
++        $showReceipt = \count($receipt->getLines()) > 0;
+ 
+         if ($flow->isSubmitted() && $flow->isValid() && $flow->isFinished()) {
+             $finalArray = $flow->getConfig()->getDataStorage()->load() ?? $flow->getData() ?? [];
+diff --git a/src/Presentation/Web/Service/WizardRuntimeResult.php b/src/Presentation/Web/Service/WizardRuntimeResult.php
+index fdf4e8f..f649446 100644
+--- a/src/Presentation/Web/Service/WizardRuntimeResult.php
++++ b/src/Presentation/Web/Service/WizardRuntimeResult.php
+@@ -7,16 +7,19 @@ namespace Yiggle\FormWizardBundle\Presentation\Web\Service;
+ use Symfony\Component\Form\FormView;
+ use Symfony\Component\HttpFoundation\Response;
+ 
+-final class WizardRuntimeResult
++/**
++ * @internal Data container returned by the wizard runtime.
++ */
++final readonly class WizardRuntimeResult
+ {
+     /**
+      * @param array<string, mixed> $viewData
+      */
+     private function __construct(
+-        public readonly bool $notFound,
+-        public readonly ?Response $response,
+-        public readonly array $viewData,
+-        public readonly int $status,
++        public bool      $notFound,
++        public ?Response $response,
++        public array     $viewData,
++        public int       $status,
+     ) {
+     }
+ 
+diff --git a/src/Presentation/Web/WizardMount/HybridWizardMountResolver.php b/src/Presentation/Web/WizardMount/HybridWizardMountResolver.php
+index d1b0520..2204656 100644
+--- a/src/Presentation/Web/WizardMount/HybridWizardMountResolver.php
++++ b/src/Presentation/Web/WizardMount/HybridWizardMountResolver.php
+@@ -7,6 +7,9 @@ namespace Yiggle\FormWizardBundle\Presentation\Web\WizardMount;
+ use Sulu\Content\Application\ContentResolver\Value\ContentView;
+ use Yiggle\FormWizardBundle\Infrastructure\Sulu\Content\ResourceLoader\WizardResourceLoader;
+ 
++/**
++ * @internal Internal resolver used to determine wizard mount configuration.
++ */
+ final class HybridWizardMountResolver implements WizardMountResolverInterface
+ {
+     public function resolve(array $suluParameters): array
+diff --git a/src/Presentation/Web/WizardMount/WizardMount.php b/src/Presentation/Web/WizardMount/WizardMount.php
+index 8a6899c..f4da970 100644
+--- a/src/Presentation/Web/WizardMount/WizardMount.php
++++ b/src/Presentation/Web/WizardMount/WizardMount.php
+@@ -4,6 +4,9 @@ declare(strict_types=1);
+ 
+ namespace Yiggle\FormWizardBundle\Presentation\Web\WizardMount;
+ 
++/**
++ * @internal Internal value object representing wizard mount configuration.
++ */
+ final readonly class WizardMount
+ {
+     /**
+diff --git a/src/Support/PHPStan/Types.php b/src/Support/PHPStan/Types.php
+index 50a4737..03bc421 100644
+--- a/src/Support/PHPStan/Types.php
++++ b/src/Support/PHPStan/Types.php
+@@ -8,6 +8,8 @@ use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardFormInterface;
+ use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardSubmissionInterface;
+ 
+ /**
++ * @internal Internal utility class for static type helpers.
++ *
+  * @phpstan-type StepUuid string
+  * @phpstan-type FieldName string
+  * @phpstan-type SubmittedData array<StepUuid, array<FieldName, mixed>>
+diff --git a/tests/Controller/TestExportController.php b/tests/Controller/TestExportController.php
+index 72fac05..63476be 100644
+--- a/tests/Controller/TestExportController.php
++++ b/tests/Controller/TestExportController.php
+@@ -44,17 +44,19 @@ final class TestExportController
+             ]
+         );
+ 
+-        $headers = $this->exporter->buildHeaders($submissions);
++        $headers = $this->exporter->buildHeaders($form);
+ 
+         $fh = fopen('php://temp', 'r+');
+         if ($fh === false) {
+             throw new \RuntimeException('Unable to open temporary memory stream for CSV export.');
+         }
+ 
++        fwrite($fh, "\xEF\xBB\xBF");
++
+         fputcsv($fh, $headers, escape: '');
+ 
+         foreach ($submissions as $submission) {
+-            foreach ($this->exporter->rowsForSubmission($submission) as $row) {
++            foreach ($this->exporter->rowsForSubmission($form, $submission) as $row) {
+                 $line = [];
+                 foreach ($headers as $h) {
+                     $line[] = $row[$h] ?? '';
+diff --git a/tests/Functional/ContainerBootFunctionalTest.php b/tests/Functional/ContainerBootFunctionalTest.php
+index bffa08f..e21f3c3 100644
+--- a/tests/Functional/ContainerBootFunctionalTest.php
++++ b/tests/Functional/ContainerBootFunctionalTest.php
+@@ -5,7 +5,6 @@ declare(strict_types=1);
+ namespace Yiggle\FormWizardBundle\Tests\Functional;
+ 
+ use Yiggle\FormWizardBundle\Application\Export\SubmissionCsvExporter;
+-use Yiggle\FormWizardBundle\Application\Export\SubmissionFlattener;
+ 
+ final class ContainerBootFunctionalTest extends FunctionalTestCase
+ {
+@@ -14,7 +13,6 @@ final class ContainerBootFunctionalTest extends FunctionalTestCase
+         $c = static::getContainer();
+ 
+         self::assertTrue($c->has('doctrine.orm.entity_manager'));
+-        self::assertTrue($c->has(SubmissionFlattener::class));
+         self::assertTrue($c->has(SubmissionCsvExporter::class));
+     }
+ }
+diff --git a/tests/Functional/ExportControllerFunctionalTest.php b/tests/Functional/ExportControllerFunctionalTest.php
+index 00e960f..806e8ed 100644
+--- a/tests/Functional/ExportControllerFunctionalTest.php
++++ b/tests/Functional/ExportControllerFunctionalTest.php
+@@ -19,13 +19,19 @@ final class ExportControllerFunctionalTest extends FunctionalTestCase
+         $em->flush();
+ 
+         $uuid = $form->getUuid();
++
+         $this->client->request('GET', sprintf('/_test/fw/forms/%s/submissions.csv', $uuid));
+ 
+         $response = $this->client->getResponse();
++
+         self::assertSame(Response::HTTP_OK, $response->getStatusCode());
+         self::assertStringContainsString('text/csv', (string) $response->headers->get('Content-Type'));
+ 
+         $content = (string) $response->getContent();
+-        self::assertStringContainsString('submission_id', $content);
++
++        $this->assertStringStartsWith("\xEF\xBB\xBF", $content, 'De CSV moet beginnen met een UTF-8 BOM.');
++
++        $this->assertStringContainsString('"Submission Date"', $content);
++        $this->assertStringContainsString('"Total Paid"', $content);
+     }
+ }
+diff --git a/tests/Unit/SubmissionCsvExporterTest.php b/tests/Unit/SubmissionCsvExporterTest.php
+index 65b0c6a..def7cce 100644
+--- a/tests/Unit/SubmissionCsvExporterTest.php
++++ b/tests/Unit/SubmissionCsvExporterTest.php
+@@ -5,41 +5,54 @@ declare(strict_types=1);
+ namespace Yiggle\FormWizardBundle\Tests\Unit;
+ 
+ use PHPUnit\Framework\TestCase;
++use Symfony\Contracts\Translation\TranslatorInterface;
+ use Yiggle\FormWizardBundle\Application\Export\SubmissionCsvExporter;
+-use Yiggle\FormWizardBundle\Application\Export\SubmissionFlattener;
+-use Yiggle\FormWizardBundle\Domain\Entity\WizardForm;
+-use Yiggle\FormWizardBundle\Domain\Entity\WizardSubmission;
+-use Yiggle\FormWizardBundle\Domain\Payment\PaymentStatus;
++use Yiggle\FormWizardBundle\Application\Service\PriceCalculatorInterface;
++use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardFormInterface;
++use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardReceiptInterface;
++use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardSubmissionInterface;
+ 
+ final class SubmissionCsvExporterTest extends TestCase
+ {
+-    public function testItBuildsHeadersAndRows(): void
++    public function testItBuildsHeadersAndRowsWithTranslationKeys(): void
+     {
+-        $exporter = new SubmissionCsvExporter(new SubmissionFlattener());
+-
+-        $wizard = new WizardForm('w');
+-        $wizard->setTitle('T');
+-
+-        $s = new WizardSubmission('s1');
+-        $s->setForm($wizard);
+-        $s->setStatus(PaymentStatus::Completed);
+-        $s->setCurrency('EUR');
+-        $s->setTotalAmountCents(123);
+-        $s->setData([
+-            'step-1' => [
+-                'email' => 'a@b.com',
+-                'name' => 'Test',
+-            ],
+-        ]);
+-
+-        $headers = $exporter->buildHeaders([$s]);
+-
+-        self::assertContains('submission_id', $headers);
+-        self::assertContains('status', $headers);
+-        self::assertContains('step-1.email', $headers);
+-
+-        $rows = iterator_to_array($exporter->rowsForSubmission($s));
+-        self::assertCount(1, $rows);
+-        self::assertSame('a@b.com', $rows[0]['step-1.email']);
++        $translator = $this->createStub(TranslatorInterface::class);
++        $priceCalculator = $this->createStub(PriceCalculatorInterface::class);
++
++        $translator->method('trans')->willReturnCallback(fn ($id) => $id);
++
++        $exporter = new SubmissionCsvExporter($priceCalculator, $translator, 'yiggle_form_wizard');
++
++        $wizard = $this->createStub(WizardFormInterface::class);
++        $submission = $this->createStub(WizardSubmissionInterface::class);
++
++        $receipt = $this->createStub(WizardReceiptInterface::class);
++        $receipt->method('getTotalCents')->willReturn(1000);
++        $receipt->method('getGroupedLines')->willReturn([]);
++
++        $priceCalculator->method('getReceipt')
++            ->willReturn($receipt);
++
++        $createdAt = new \DateTimeImmutable('2024-01-01 12:00:00');
++        $submission->method('getCreatedAt')->willReturn($createdAt);
++        $submission->method('getUuid')->willReturn('test-uuid-123');
++        $submission->method('getData')->willReturn([]);
++
++        $wizard->method('getSteps')->willReturn([]);
++
++        $headers = $exporter->buildHeaders($wizard);
++
++        $this->assertContains('yiggle_form_wizard.export.date', $headers);
++        $this->assertContains('yiggle_form_wizard.export.reference_id', $headers);
++        $this->assertContains('yiggle_form_wizard.export.total_paid', $headers);
++
++        $rows = $exporter->rowsForSubmission($wizard, $submission);
++
++        $this->assertCount(1, $rows);
++        $row = $rows[0];
++
++        $this->assertSame('01-01-2024 12:00', $row['yiggle_form_wizard.export.date']);
++        $this->assertSame('test-uuid-123', $row['yiggle_form_wizard.export.reference_id']);
++        $this->assertSame('10,00', $row['yiggle_form_wizard.export.total_paid']);
+     }
+ }
+diff --git a/tests/Unit/SubmissionFlattenerTest.php b/tests/Unit/SubmissionFlattenerTest.php
+deleted file mode 100644
+index a2f9c01..0000000
+--- a/tests/Unit/SubmissionFlattenerTest.php
++++ /dev/null
+@@ -1,31 +0,0 @@
+-<?php
+-
+-declare(strict_types=1);
+-
+-namespace Yiggle\FormWizardBundle\Tests\Unit;
+-
+-use PHPUnit\Framework\TestCase;
+-use Yiggle\FormWizardBundle\Application\Export\SubmissionFlattener;
+-
+-final class SubmissionFlattenerTest extends TestCase
+-{
+-    public function testItFlattensNestedArrays(): void
+-    {
+-        $f = new SubmissionFlattener();
+-
+-        $rows = $f->flattenToRows([
+-            'step-1' => [
+-                'email' => 'a@b.com',
+-                'name' => 'A',
+-            ],
+-            'step-2' => [
+-                'age' => 10,
+-            ],
+-        ]);
+-
+-        self::assertCount(1, $rows);
+-        self::assertSame('a@b.com', $rows[0]['step-1.email'] ?? null);
+-        self::assertSame('A', $rows[0]['step-1.name'] ?? null);
+-        self::assertSame('10', $rows[0]['step-2.age'] ?? null);
+-    }
+-}
+diff --git a/tests/config/services_test.php b/tests/config/services_test.php
+index 7cf686a..132eb78 100644
+--- a/tests/config/services_test.php
++++ b/tests/config/services_test.php
+@@ -5,7 +5,6 @@ declare(strict_types=1);
+ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
+ 
+ use Yiggle\FormWizardBundle\Application\Export\SubmissionCsvExporter;
+-use Yiggle\FormWizardBundle\Application\Export\SubmissionFlattener;
+ use Yiggle\FormWizardBundle\Application\Service\WizardSubmissionCreator;
+ use Yiggle\FormWizardBundle\Tests\Controller\TestExportController;
+ 
+@@ -17,7 +16,6 @@ return static function (ContainerConfigurator $container): void {
+         ->autoconfigure()
+         ->public();
+ 
+-    $services->set(SubmissionFlattener::class);
+     $services->set(SubmissionCsvExporter::class);
+ 
+     $services->set(WizardSubmissionCreator::class);
+diff --git a/translations/admin.en.yaml b/translations/admin.en.yaml
+index 93f0392..fab4eba 100644
+--- a/translations/admin.en.yaml
++++ b/translations/admin.en.yaml
+@@ -2,7 +2,7 @@ yiggle_form_wizard:
+   forms: "Form Wizards"
+   navigation:
+     forms: "Yiggle Form Wizard"
+-    
++
+   tabs:
+     steps: "Wizard Steps"
+     email: "Email Settings"
+diff --git a/translations/yiggle_form_wizard.en.yaml b/translations/yiggle_form_wizard.en.yaml
+index 6ae450a..aab5454 100644
+--- a/translations/yiggle_form_wizard.en.yaml
++++ b/translations/yiggle_form_wizard.en.yaml
+@@ -3,104 +3,115 @@ yiggle_form_wizard:
+     required: "This field is required."
+     email_invalid: "Please enter a valid email address."
+     min_number: "The value must be at least {{ value }}."
+-    max_number: "The value may not exceed {{ value }}."
+-    must_accept: "You must accept the terms and conditions."
+-
++    max_number: "The value must be at most {{ value }}."
++    must_accept: "You must agree to the terms and conditions."
+   choice:
+-    placeholder: "Make a selection..."
+-
++    placeholder: "Make a choice..."
+   navigation:
+     forms: "Form Wizards"
+-
+-  forms: "Form Wizards"
+-
+-  tabs:
+-    steps: "Wizard Steps"
+-    email: "Email Settings"
+-
+   title: "Title"
+   enabled: "Enabled"
+   webspace: "Webspace"
+   website_configuration: "Website Configuration"
+-  submit_label: "Submit Button Label"
++  submit_label: "Submit Button Text"
+   payment_mode: "Payment Method"
+   success_text: "Success Message"
+-
+   steps: "Steps"
+   step: "Step"
+   step_title: "Step Title"
+   fields: "Fields"
+-
+   field:
++    choice:
++      select_option: "Make your choice..."
+     type:
+-      text: "Text"
+-      email: "Email"
+-      tel: "Phone"
+-      integer: "Number"
+-      checkbox: "Checkbox"
+-      choice: "Select"
+-      textarea: "Textarea"
+-      date: "Date"
+-    width: "Width"
+-    placeholder: "Placeholder"
+-    options: "Options (one per line)"
+-    min: "Minimum"
+-    max: "Maximum"
+-    multiple: "Allow multiple selections"
+-    expanded: "Display as radio/checkboxes"
+-    rows: "Number of rows"
+-
+-  email:
+-    subject: "Subject"
+-    from_email: "Sender Email"
+-    from_name: "Sender Name"
+-    customer_email_field: "Customer Email Field"
+-    disable_admin: "Disable admin emails"
+-    disable_customer: "Disable customer emails"
+-    include_copy: "Include copy"
+-    receivers: "Admin Recipients"
+-    receiver_type: "Type"
+-
+-  choices:
+-    none: "None"
+-    afterward: "Afterwards"
+-    required: "Required"
+-    to: "To"
+-    cc: "CC"
+-    bcc: "BCC"
+-
++      text: Text
++      email: E-mail
++      tel: Phone
++      integer: Number
++      checkbox: Checkbox
++      choice: Select list
++      textarea: Text area
++      date: Date
++    width: Width
++    placeholder: Placeholder
++    options: "Options (1 per line)"
++    min: Minimum
++    max: Maximum
++    multiple: Multiple choices
++    expanded: Show as radio/checkboxes
++    rows: Number of rows
++    checkbox:
++      receipt:
++        default_label: 'Yes'
++    radio:
++      receipt:
++        true_label: 'Yes'
++        false_label: 'No'
+   form_wizard:
+-    success: "Thank you! Your registration has been received."
+-
++    success: "Thank you for filling out the form."
++    navigation: 'Navigation'
+   dynamic_form_wizard: "Form Wizards"
+-
+   wizard:
+-    step_instruction: "Fill in the fields below to continue."
++    step_instruction: "Please fill in the fields below to continue."
+     prev: "Previous"
+     next: "Next"
+     finish: "Submit"
+     success_title: "Thank you!"
+     success_default_text: "Your submission has been successfully received."
+-    back_home: "Back to home"
+-    default_title: "Register"
++    back_home: "Back to start"
++    default_title: "Sign up"
+     current_step: "Current step"
+     reset: "Start over"
+-
++    row_label: "Add row"
++    remove_row: "Remove row"
+     receipt:
+-      title: "Summary"
++      title: "Overview"
+       total: "Total"
+-
++      empty: 'Nothing added yet.'
+     success:
+       title: "Success!"
+       text: "Thank you for your registration."
+       cta: "Back"
+-
+     payment:
+       redirecting: "You are being redirected to the payment page…"
+-
++    step: 'Step'
++    steps: 'Steps'
++    summary:
++      title: 'Summary'
++      subtitle: 'Subtitle'
++      details_title: 'Details'
+   mail:
+     admin:
+       default_subject: "New registration on website"
+-
+   payment:
+     redirecting: "You are being redirected to the payment page…"
++  current_step: 'Current step'
++  receipt:
++    title: 'Summary'
++    success:
++      cta: 'Thank you'
++    total: 'Total'
++    empty: 'Please make a selection'
++  admin:
++    field:
++      tel:
++        invalid_format: 'Invalid phone number format'
++      email:
++        invalid_format: 'Invalid email address format'
++      date:
++        min: 'Date must be after'
++        max: 'Date must be before'
++      range:
++        min: 'Minimum must be greater than'
++        max: 'Maximum must be less than'
++  success:
++    link_label: 'Thank you'
++  email:
++    summary_title: 'Submitted data'
++  export:
++    date: 'Submission Date'
++    reference_id: 'Reference ID'
++    total_paid: 'Total Paid'
++    row_price: 'Row Price'
++    yes: 'Yes'
++    no: 'No'
+diff --git a/translations/yiggle_form_wizard.nl.yaml b/translations/yiggle_form_wizard.nl.yaml
+index 3368c77..534c258 100644
+--- a/translations/yiggle_form_wizard.nl.yaml
++++ b/translations/yiggle_form_wizard.nl.yaml
+@@ -108,4 +108,10 @@ yiggle_form_wizard:
+     link_label: 'Bedankt'
+   email:
+     summary_title: 'Ingevulde gegevens'
+-
++  export:
++    date: 'Indiendatum'
++    reference_id: 'Referentie ID'
++    total_paid: 'Totaal Betaald'
++    row_price: 'Regel Prijs'
++    yes: 'Ja'
++    no: 'Nee'

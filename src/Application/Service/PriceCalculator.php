@@ -8,6 +8,7 @@ use Yiggle\FormWizardBundle\Domain\Contract\FieldType\PriceAwareFieldTypeHandler
 use Yiggle\FormWizardBundle\Domain\Contract\FieldType\ReceiptAwareFieldTypeHandlerInterface;
 use Yiggle\FormWizardBundle\Domain\Contract\FieldType\WizardFieldTypeRegistryInterface;
 use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardFormInterface;
+use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardReceiptInterface;
 use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardStepFieldInterface;
 use Yiggle\FormWizardBundle\Domain\Model\ReceiptLine;
 use Yiggle\FormWizardBundle\Domain\Model\WizardReceipt;
@@ -15,6 +16,8 @@ use Yiggle\FormWizardBundle\Support\Money\ConvertsMoney;
 use Yiggle\FormWizardBundle\Support\PHPStan\Types;
 
 /**
+ * @internal Calculates wizard pricing during submission processing.
+ *           This class is internal to the bundle.
  * @phpstan-import-type Config from Types
  */
 final readonly class PriceCalculator implements PriceCalculatorInterface
@@ -26,7 +29,7 @@ final readonly class PriceCalculator implements PriceCalculatorInterface
     ) {
     }
 
-    public function getReceipt(WizardFormInterface $form, array $submittedData): WizardReceipt
+    public function getReceipt(WizardFormInterface $form, array $submittedData): WizardReceiptInterface
     {
         $lines = [];
         $totalCents = $this->eurosToCents($form->getFixedAmount());

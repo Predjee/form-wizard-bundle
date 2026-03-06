@@ -9,6 +9,9 @@ use Yiggle\FormWizardBundle\Infrastructure\FieldType\AsWizardFieldType;
 use Yiggle\FormWizardBundle\Infrastructure\FieldType\WizardFieldTypeRegistry;
 use Yiggle\FormWizardBundle\Presentation\Web\Form\Type\WizardRepeatableGroupType;
 
+/**
+ * @internal Built-in field type handler.
+ */
 #[AsWizardFieldType]
 final class RepeatableGroupFieldTypeHandler extends AbstractWizardFieldTypeHandler
 {

@@ -10,6 +10,7 @@ use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardStepFieldInterface;
 use Yiggle\FormWizardBundle\Domain\Entity\WizardStepField;
 
 /**
+ * @internal
  * @extends ServiceEntityRepository<WizardStepField>
  */
 final class WizardStepFieldRepository extends ServiceEntityRepository

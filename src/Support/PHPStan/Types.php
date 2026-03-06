@@ -8,6 +8,8 @@ use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardFormInterface;
 use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardSubmissionInterface;
 
 /**
+ * @internal Internal utility class for static type helpers.
+ *
  * @phpstan-type StepUuid string
  * @phpstan-type FieldName string
  * @phpstan-type SubmittedData array<StepUuid, array<FieldName, mixed>>

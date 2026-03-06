@@ -19,6 +19,9 @@ use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardSubmissionInterface;
 use Yiggle\FormWizardBundle\Domain\Contract\Payment\PaymentProviderInterface;
 use Yiggle\FormWizardBundle\Domain\Payment\PaymentStatus;
 
+/**
+ * @internal Built-in Mollie payment provider implementation.
+ */
 #[AutoconfigureTag('yiggle_form_wizard.payment_provider', [
     'alias' => 'mollie',
 ])]
@@ -132,8 +135,6 @@ final readonly class MollieProvider implements PaymentProviderInterface
             'success',
             $submission->getForm()->getUuid(),
         );
-
-        dump($returnUrl, $signed);
 
         return $signed;
     }

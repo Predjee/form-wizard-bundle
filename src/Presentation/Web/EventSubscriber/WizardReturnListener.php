@@ -11,13 +11,16 @@ use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Yiggle\FormWizardBundle\Application\Security\ReturnUrlServiceInterface;
 use Yiggle\FormWizardBundle\Application\Service\WizardCompletionState;
 
+/**
+ * @internal Symfony event listener handling payment return redirects.
+ */
 #[AsEventListener(event: RequestEvent::class, priority: 10)]
-final class WizardReturnListener
+final readonly class WizardReturnListener
 {
     public function __construct(
-        private readonly ReturnUrlServiceInterface $returnUrlService,
-        private readonly WizardCompletionState $completionState,
-        private readonly LoggerInterface $logger,
+        private ReturnUrlServiceInterface $returnUrlService,
+        private WizardCompletionState $completionState,
+        private LoggerInterface $logger,
     ) {
     }
 

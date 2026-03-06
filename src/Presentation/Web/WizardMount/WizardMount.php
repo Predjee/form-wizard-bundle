@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Yiggle\FormWizardBundle\Presentation\Web\WizardMount;
 
+/**
+ * @internal Internal value object representing wizard mount configuration.
+ */
 final readonly class WizardMount
 {
     /**

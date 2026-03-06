@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace Yiggle\FormWizardBundle\Infrastructure\Sulu\Admin\Controller;
 
-use Http\Discovery\Exception\NotFoundException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Yiggle\FormWizardBundle\Application\Export\SubmissionCsvExporter;
-use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardSubmissionInterface;
 use Yiggle\FormWizardBundle\Infrastructure\Persistence\Doctrine\Repository\WizardFormRepository;
 use Yiggle\FormWizardBundle\Infrastructure\Persistence\Doctrine\Repository\WizardSubmissionRepository;
 
@@ -17,73 +16,46 @@ use Yiggle\FormWizardBundle\Infrastructure\Persistence\Doctrine\Repository\Wizar
 final class WizardSubmissionExportController extends AbstractController
 {
     public function __construct(
-        private readonly WizardFormRepository $forms,
-        private readonly WizardSubmissionRepository $submissions,
-        private readonly SubmissionCsvExporter $exporter,
+        private WizardFormRepository $forms,
+        private WizardSubmissionRepository $submissions,
+        private SubmissionCsvExporter $exporter,
     ) {
     }
 
     public function __invoke(string $id): StreamedResponse
     {
-        $form = $this->forms->find($id) ?? throw new NotFoundException();
+        $form = $this->forms->find($id) ?? throw new NotFoundHttpException();
+        $submissions = $this->submissions->iterateByFormUuid($form->getUuid());
+        $headers = $this->exporter->buildHeaders($form);
 
-        $submissions = $this->materializeSubmissions($form->getUuid());
-
-        $headers = $this->exporter->buildHeaders($submissions);
-
-        $filename = sprintf('wizard_%s_submissions.csv', $form->getUuid());
-
-        $response = new StreamedResponse(function () use ($headers, $submissions): void {
-            $out = fopen('php://output', 'wb');
-
-            if (! is_resource($out)) {
-                return;
+        $response = new StreamedResponse(function () use ($headers, $submissions, $form): void {
+            $handle = fopen('php://output', 'wb');
+            if (! is_resource($handle)) {
+                throw new \RuntimeException('Unable to open output stream for CSV export.');
             }
+
+            fwrite($handle, "\xEF\xBB\xBF");
 
             $delimiter = ';';
-
-            fwrite($out, "\xEF\xBB\xBF");
-
-            fputcsv($out, $headers, $delimiter);
+            fputcsv($handle, $headers, $delimiter);
 
             foreach ($submissions as $submission) {
-                foreach ($this->exporter->rowsForSubmission($submission) as $row) {
+                $rows = $this->exporter->rowsForSubmission($form, $submission);
+                foreach ($rows as $row) {
                     $line = [];
-                    foreach ($headers as $h) {
-                        $line[] = $row[$h] ?? '';
+                    foreach ($headers as $header) {
+                        $line[] = $row[$header] ?? '';
                     }
-                    fputcsv($out, $line, $delimiter);
+                    fputcsv($handle, $line, $delimiter);
                 }
             }
-
-            fclose($out);
+            fclose($handle);
         });
 
+        $filename = sprintf('export_%s_%s.csv', $form->getUuid(), date('Ymd'));
         $response->headers->set('Content-Type', 'text/csv; charset=UTF-8');
         $response->headers->set('Content-Disposition', 'attachment; filename="' . $filename . '"');
 
         return $response;
-    }
-
-    /**
-     * @return list<WizardSubmissionInterface>
-     */
-    private function materializeSubmissions(string $formUuid): array
-    {
-        $iterable = $this->iterateSubmissions($formUuid);
-
-        if (is_array($iterable)) {
-            return array_values($iterable);
-        }
-
-        return iterator_to_array($iterable, false);
-    }
-
-    /**
-     * @return iterable<WizardSubmissionInterface>
-     */
-    private function iterateSubmissions(string $formUuid): iterable
-    {
-        return $this->submissions->iterateByFormUuid($formUuid);
     }
 }

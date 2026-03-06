@@ -7,16 +7,19 @@ namespace Yiggle\FormWizardBundle\Presentation\Web\Service;
 use Symfony\Component\Form\FormView;
 use Symfony\Component\HttpFoundation\Response;
 
-final class WizardRuntimeResult
+/**
+ * @internal Data container returned by the wizard runtime.
+ */
+final readonly class WizardRuntimeResult
 {
     /**
      * @param array<string, mixed> $viewData
      */
     private function __construct(
-        public readonly bool $notFound,
-        public readonly ?Response $response,
-        public readonly array $viewData,
-        public readonly int $status,
+        public bool $notFound,
+        public ?Response $response,
+        public array $viewData,
+        public int $status,
     ) {
     }
 

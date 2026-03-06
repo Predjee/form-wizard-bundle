@@ -108,4 +108,10 @@ yiggle_form_wizard:
     link_label: 'Bedankt'
   email:
     summary_title: 'Ingevulde gegevens'
-
+  export:
+    date: 'Indiendatum'
+    reference_id: 'Referentie ID'
+    total_paid: 'Totaal Betaald'
+    row_price: 'Regel Prijs'
+    yes: 'Ja'
+    no: 'Nee'

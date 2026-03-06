@@ -12,6 +12,9 @@ use Yiggle\FormWizardBundle\Infrastructure\FieldType\AbstractWizardFieldTypeHand
 use Yiggle\FormWizardBundle\Infrastructure\FieldType\AsWizardFieldType;
 use Yiggle\FormWizardBundle\Support\Money\ConvertsMoney;
 
+/**
+ * @internal Built-in field type handler.
+ */
 #[AsWizardFieldType]
 final class ChoiceWithPriceFieldTypeHandler extends AbstractWizardFieldTypeHandler implements PriceAwareFieldTypeHandlerInterface, ReceiptTriggeringFieldTypeHandlerInterface
 {

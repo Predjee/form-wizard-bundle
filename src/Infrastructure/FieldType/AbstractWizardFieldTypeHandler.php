@@ -7,6 +7,9 @@ namespace Yiggle\FormWizardBundle\Infrastructure\FieldType;
 use Symfony\Component\Validator\Constraints as Assert;
 use Yiggle\FormWizardBundle\Domain\Contract\FieldType\WizardFieldTypeHandlerInterface;
 
+/**
+ * @internal Base implementation for wizard field type handlers.
+ */
 abstract class AbstractWizardFieldTypeHandler implements WizardFieldTypeHandlerInterface
 {
     #[\Override]

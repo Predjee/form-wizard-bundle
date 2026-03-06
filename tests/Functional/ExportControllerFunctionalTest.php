@@ -19,13 +19,19 @@ final class ExportControllerFunctionalTest extends FunctionalTestCase
         $em->flush();
 
         $uuid = $form->getUuid();
+
         $this->client->request('GET', sprintf('/_test/fw/forms/%s/submissions.csv', $uuid));
 
         $response = $this->client->getResponse();
+
         self::assertSame(Response::HTTP_OK, $response->getStatusCode());
         self::assertStringContainsString('text/csv', (string) $response->headers->get('Content-Type'));
 
         $content = (string) $response->getContent();
-        self::assertStringContainsString('submission_id', $content);
+
+        $this->assertStringStartsWith("\xEF\xBB\xBF", $content, 'De CSV moet beginnen met een UTF-8 BOM.');
+
+        $this->assertStringContainsString('"Submission Date"', $content);
+        $this->assertStringContainsString('"Total Paid"', $content);
     }
 }

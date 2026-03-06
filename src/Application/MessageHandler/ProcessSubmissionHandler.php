@@ -5,16 +5,20 @@ declare(strict_types=1);
 namespace Yiggle\FormWizardBundle\Application\MessageHandler;
 
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
+use Yiggle\FormWizardBundle\Application\Contract\NotificationDispatcherInterface;
 use Yiggle\FormWizardBundle\Application\Contract\WizardSubmissionRepositoryInterface;
-use Yiggle\FormWizardBundle\Application\Service\NotificationService;
 use Yiggle\FormWizardBundle\Message\ProcessSubmission;
 
+/**
+ * @internal Messenger handler responsible for processing submissions asynchronously.
+ *           This handler is not intended as a public extension point.
+ */
 #[AsMessageHandler]
 final readonly class ProcessSubmissionHandler
 {
     public function __construct(
         private WizardSubmissionRepositoryInterface $submissions,
-        private NotificationService $notifications,
+        private NotificationDispatcherInterface $notifications,
     ) {
     }
 

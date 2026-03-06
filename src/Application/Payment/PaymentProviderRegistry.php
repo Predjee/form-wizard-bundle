@@ -7,6 +7,9 @@ namespace Yiggle\FormWizardBundle\Application\Payment;
 use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 use Yiggle\FormWizardBundle\Domain\Contract\Payment\PaymentProviderInterface;
 
+/**
+ * @internal Internal registry used to resolve configured payment providers.
+ */
 final class PaymentProviderRegistry implements PaymentProviderRegistryInterface
 {
     /**
