@@ -7,10 +7,12 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 use Symfony\Component\HttpFoundation\UriSigner;
 use Yiggle\FormWizardBundle\Application\Contract\EventBusInterface;
 use Yiggle\FormWizardBundle\Application\Contract\WizardCompletionInterface;
+use Yiggle\FormWizardBundle\Application\Contract\WizardPaymentInitiatorInterface;
 use Yiggle\FormWizardBundle\Application\Payment\PaymentProviderRegistry;
 use Yiggle\FormWizardBundle\Application\Security\ReturnUrlService;
 use Yiggle\FormWizardBundle\Application\Service\NotificationService;
 use Yiggle\FormWizardBundle\Application\Service\WizardManager;
+use Yiggle\FormWizardBundle\Application\Service\WizardPaymentInitiator;
 use Yiggle\FormWizardBundle\Application\UseCase\CompleteWizard\CompleteWizard;
 use Yiggle\FormWizardBundle\Domain\Contract\Factory\WizardFieldFactoryInterface;
 use Yiggle\FormWizardBundle\Domain\Contract\Factory\WizardStepFactoryInterface;
@@ -72,6 +74,7 @@ return static function (ContainerConfigurator $container): void {
     $services->alias(WizardStepFactoryInterface::class, WizardStepFactory::class);
     $services->alias(WizardFieldFactoryInterface::class, WizardFieldFactory::class);
     $services->alias(WizardStepFieldFactoryInterface::class, WizardStepFieldFactory::class);
+    $services->alias(WizardPaymentInitiatorInterface::class, WizardPaymentInitiator::class);
 
     $services->alias(WizardMountResolverInterface::class, HybridWizardMountResolver::class);
 };
