@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Yiggle\FormWizardBundle\Application\Service;
 
 use Yiggle\FormWizardBundle\Application\Contract\EventBusInterface;
+use Yiggle\FormWizardBundle\Application\Contract\WizardPaymentInitiatorInterface;
 use Yiggle\FormWizardBundle\Application\Contract\WizardSubmissionRepositoryInterface;
 use Yiggle\FormWizardBundle\Application\Event\WizardPaymentInitiatedEvent;
 use Yiggle\FormWizardBundle\Application\Payment\PaymentProviderRegistryInterface;
@@ -15,7 +16,7 @@ use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardSubmissionInterface;
  * @internal Responsible for initiating payment flows. This class is an internal
  *           orchestration service and not part of the public API.
  */
-final readonly class WizardPaymentInitiator
+final readonly class WizardPaymentInitiator implements WizardPaymentInitiatorInterface
 {
     public function __construct(
         private PaymentProviderRegistryInterface $providers,

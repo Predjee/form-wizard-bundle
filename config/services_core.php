@@ -74,7 +74,6 @@ return static function (ContainerConfigurator $container): void {
     $services->alias(WizardStepFactoryInterface::class, WizardStepFactory::class);
     $services->alias(WizardFieldFactoryInterface::class, WizardFieldFactory::class);
     $services->alias(WizardStepFieldFactoryInterface::class, WizardStepFieldFactory::class);
-    $services->alias(WizardPaymentInitiatorInterface::class, WizardPaymentInitiator::class);
 
     $services->alias(WizardMountResolverInterface::class, HybridWizardMountResolver::class);
 };
