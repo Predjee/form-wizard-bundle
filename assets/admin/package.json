@@ -4,7 +4,9 @@
   "description": "Yiggle Form Wizard Bundle with Sulu Admin integration",
   "license": "MIT",
   "peerDependencies": {
-    "@hotwired/stimulus": "^3.0",
-    "@hotwired/turbo": "^8.0"
+    "mobx": "^4.0.0 || ^5.0.0",
+    "mobx-react": "^5.0.0",
+    "react": "^16.8.0 || ^17.0.0",
+    "sulu-admin-bundle": "*"
   }
 }
