@@ -116,15 +116,23 @@ final readonly class SubmissionCsvExporter
         if ($val === null || $val === '') {
             return '';
         }
+
         if (is_bool($val)) {
             return $val ? $this->trans('export.yes') : $this->trans('export.no');
         }
+
+        if (is_array($val)) {
+            $formattedValues = array_map(fn ($item) => $this->formatValue($item, $opts), $val);
+            return implode(', ', $formattedValues);
+        }
+
         foreach ($opts as $o) {
             if (is_array($o) && (string) ($o['value'] ?? '') === (string) $val) {
                 return (string) ($o['label'] ?? $val);
             }
         }
-        return is_array($val) ? (json_encode($val) ?: '') : (string) $val;
+
+        return (string) $val;
     }
 
     private function trans(string $id): string
