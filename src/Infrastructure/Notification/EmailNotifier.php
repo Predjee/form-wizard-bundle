@@ -14,9 +14,6 @@ use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardFormInterface;
 use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardSubmissionInterface;
 use Yiggle\FormWizardBundle\Domain\Contract\WizardNotifierInterface;
 
-/**
- * @internal Default email notification implementation.
- */
 #[AutoconfigureTag('yiggle_form_wizard.wizard_notifier')]
 final readonly class EmailNotifier implements WizardNotifierInterface
 {
@@ -80,13 +77,7 @@ final readonly class EmailNotifier implements WizardNotifierInterface
             return;
         }
 
-        $customerEmail = null;
-        foreach ($submission->getData() as $stepData) {
-            if (is_array($stepData) && isset($stepData[$toFieldKey])) {
-                $customerEmail = $stepData[$toFieldKey];
-                break;
-            }
-        }
+        $customerEmail = $this->findValueRecursive($submission->getData(), $toFieldKey);
 
         if (! is_string($customerEmail) || ! filter_var($customerEmail, FILTER_VALIDATE_EMAIL)) {
             return;
@@ -99,6 +90,22 @@ final readonly class EmailNotifier implements WizardNotifierInterface
 
         $email->to($customerEmail);
         $this->mailer->send($email);
+    }
+
+    private function findValueRecursive(array $data, string $targetKey): ?string
+    {
+        foreach ($data as $key => $value) {
+            if ($key === $targetKey && is_string($value)) {
+                return $value;
+            }
+            if (is_array($value)) {
+                $result = $this->findValueRecursive($value, $targetKey);
+                if ($result) {
+                    return $result;
+                }
+            }
+        }
+        return null;
     }
 
     private function createBaseEmail(WizardFormInterface $wizard, WizardSubmissionInterface $submission, bool $isAdmin): ?TemplatedEmail
@@ -152,6 +159,10 @@ final readonly class EmailNotifier implements WizardNotifierInterface
 
     private function formatValue(WizardFieldInterface $field, mixed $value): mixed
     {
+        if (is_array($value) && array_is_list($value) && (empty($value) || ! is_array($value[0]))) {
+            return implode(', ', array_filter($value, 'is_scalar'));
+        }
+
         if (! is_array($value) || empty($value)) {
             return $value;
         }
@@ -159,46 +170,32 @@ final readonly class EmailNotifier implements WizardNotifierInterface
         $config = $field->getConfig();
         $rowFields = $config['rowFields'] ?? [];
 
-        if (! is_array($rowFields) || empty($rowFields)) {
-            return $value;
-        }
-
-        $formattedList = [];
-        if (array_is_list($value)) {
-            foreach ($value as $entry) {
-                if (! is_array($entry)) {
-                    continue;
+        if (! empty($rowFields)) {
+            $formattedList = [];
+            if (array_is_list($value)) {
+                foreach ($value as $entry) {
+                    if (is_array($entry)) {
+                        $formattedList[] = $this->mapEntryToConfig($rowFields, $entry);
+                    }
                 }
-                /** @var array<string, mixed> $entry */
-                $formattedList[] = $this->mapEntryToConfig($rowFields, $entry);
+                return $formattedList;
             }
-            return $formattedList;
+            return $this->mapEntryToConfig($rowFields, $value);
         }
 
-        /** @var array<string, mixed> $value */
-        return $this->mapEntryToConfig($rowFields, $value);
+        return $value;
     }
 
-    /**
-     * @param array<mixed> $rowFields
-     * @param array<string, mixed> $entry
-     * @return array<int, array{label: string, value: mixed, width: int}>
-     */
     private function mapEntryToConfig(array $rowFields, array $entry): array
     {
-        /** @var array<int, array{label: string, value: mixed, width: int}> $mapped */
         $mapped = [];
         $processedKeys = [];
 
         foreach ($rowFields as $fieldConfig) {
-            if (! is_array($fieldConfig)) {
-                continue;
-            }
-
             $name = $fieldConfig['name'] ?? null;
             if (is_string($name) && array_key_exists($name, $entry)) {
                 $rawValue = $entry[$name];
-                $displayValue = $rawValue;
+                $displayValue = is_array($rawValue) ? implode(', ', array_filter($rawValue, 'is_scalar')) : $rawValue;
 
                 if (! empty($fieldConfig['options']) && is_array($fieldConfig['options'])) {
                     foreach ($fieldConfig['options'] as $option) {
@@ -222,7 +219,7 @@ final readonly class EmailNotifier implements WizardNotifierInterface
             if (! in_array($key, $processedKeys, true)) {
                 $mapped[] = [
                     'label' => ucfirst($key),
-                    'value' => is_array($value) ? json_encode($value) : $value,
+                    'value' => is_array($value) ? implode(', ', array_filter($value, 'is_scalar')) : $value,
                     'width' => 12,
                 ];
             }
