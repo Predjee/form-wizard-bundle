@@ -208,19 +208,16 @@ final readonly class EmailNotifier implements WizardNotifierInterface
             if (is_string($name) && array_key_exists($name, $entry)) {
                 $rawValue = $entry[$name];
 
-                $displayValue = $rawValue;
-                if (is_array($rawValue)) {
-                    $displayValue = $this->renderValueSafe($rawValue);
-                    if ($displayValue === false) {
-                        continue;
-                    }
-                }
+                $displayValue = is_array($rawValue) ? $this->renderValueSafe($rawValue) : $rawValue;
 
                 if (! empty($fieldConfig['options']) && is_array($fieldConfig['options'])) {
                     foreach ($fieldConfig['options'] as $option) {
-                        if (isset($option['value']) && (string) $option['value'] === (string) $rawValue) {
-                            $displayValue = $option['label'] ?? $displayValue;
-                            break;
+                        $optionValue = $option['value'] ?? null;
+                        if ($optionValue !== null && ! is_array($rawValue)) {
+                            if ((string) $optionValue === (string) $rawValue) {
+                                $displayValue = $option['label'] ?? $displayValue;
+                                break;
+                            }
                         }
                     }
                 }
@@ -237,7 +234,7 @@ final readonly class EmailNotifier implements WizardNotifierInterface
         foreach ($entry as $key => $value) {
             if (! in_array($key, $processedKeys, true)) {
                 $mapped[] = [
-                    'label' => ucfirst($key),
+                    'label' => ucfirst((string) $key),
                     'value' => is_array($value) ? $this->renderValueSafe($value) : $value,
                     'width' => 12,
                 ];
@@ -247,7 +244,7 @@ final readonly class EmailNotifier implements WizardNotifierInterface
         return $mapped;
     }
 
-    private function renderValueSafe(mixed $value): string|false
+    private function renderValueSafe(mixed $value): string
     {
         if (! is_array($value)) {
             return (string) $value;
@@ -258,6 +255,6 @@ final readonly class EmailNotifier implements WizardNotifierInterface
             return implode(', ', $scalars);
         }
 
-        return json_encode($value);
+        return (string) json_encode($value);
     }
 }
