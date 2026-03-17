@@ -1,0 +1,37 @@
+{% trans_default_domain 'yiggle_form_wizard' %}
+
+{% if receipt.isEmpty() %}
+    <div class="yw-mobile-line">
+        <span>{{ 'yiggle_form_wizard.wizard.receipt.empty'|trans }}</span>
+    </div>
+{% else %}
+    {% for line in receipt.ungroupedLines %}
+        <div class="yw-mobile-line">
+            <span>
+                {{ line.label }}
+                {% if line.description %}<br><small>{{ line.description }}</small>{% endif %}
+            </span>
+            <span>{{ (line.amountCents / 100)|format_currency('EUR', {rounding_mode: 'floor'}) }}</span>
+        </div>
+    {% endfor %}
+
+    {% for group in receipt.groupedLines %}
+        <div class="yw-mobile-group-title">
+            <strong>{{ group.title }}</strong>
+        </div>
+
+        {% for item in group.items %}
+            <div class="yw-mobile-item-title">{{ item.title }}</div>
+
+            {% for line in item.lines %}
+                <div class="yw-mobile-line">
+                    <span>
+                        {{ line.label }}
+                        {% if line.description %}<br><small>{{ line.description }}</small>{% endif %}
+                    </span>
+                    <span>{{ (line.amountCents / 100)|format_currency('EUR', {rounding_mode: 'floor'}) }}</span>
+                </div>
+            {% endfor %}
+        {% endfor %}
+    {% endfor %}
+{% endif %}

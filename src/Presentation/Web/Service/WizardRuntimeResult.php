@@ -6,6 +6,7 @@ namespace Yiggle\FormWizardBundle\Presentation\Web\Service;
 
 use Symfony\Component\Form\FormView;
 use Symfony\Component\HttpFoundation\Response;
+use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardReceiptInterface;
 
 /**
  * @internal Data container returned by the wizard runtime.
@@ -37,22 +38,20 @@ final readonly class WizardRuntimeResult
         mixed $wizard,
         string $wizardId,
         ?FormView $form,
-        mixed $receipt,
+        WizardReceiptInterface $receipt,
         bool $isCompleted,
         string $variantTemplate,
         bool $showReceipt,
         int $status = Response::HTTP_OK,
     ): self {
-        $viewData = [
-            'wizard' => $wizard,
-            'wizardId' => $wizardId,
-            'form' => $form,
-            'receipt' => $receipt,
-            'isCompleted' => $isCompleted,
+        return new self(false, null, [
+            'wizard'          => $wizard,
+            'wizardId'        => $wizardId,
+            'form'            => $form,
+            'receipt'         => $receipt,
+            'isCompleted'     => $isCompleted,
             'variantTemplate' => $variantTemplate,
-            'showReceipt' => $showReceipt,
-        ];
-
-        return new self(false, null, $viewData, $status);
+            'showReceipt'     => $showReceipt,
+        ], $status);
     }
 }

@@ -8,70 +8,18 @@
     </div>
 </aside>
 
-
 <div class="yw-receipt-mobile">
     <input type="checkbox" id="yw-receipt-toggle">
     <label for="yw-receipt-toggle" class="yw-mobile-header">
         <span class="yw-mobile-total-label">{{ 'yiggle_form_wizard.wizard.receipt.mobile_toggle'|default('Overzicht')|trans }}</span>
         <span class="yw-mobile-total-value" id="wizard-receipt-container-mobile">
-            {{ ((receipt.totalInCents ?? 0) / 100)|format_currency('EUR', {rounding_mode: 'floor'}) }}
+            {{ (receipt.totalInCents / 100)|format_currency('EUR', {rounding_mode: 'floor'}) }}
         </span>
     </label>
 
-    <div class="yw-mobile-body">
-        {% if receipt is not defined or receipt is null or (receipt.lines is empty) %}
-            <div class="yw-mobile-line">
-                <span>{{ 'yiggle_form_wizard.wizard.receipt.empty'|trans }}</span>
-            </div>
-        {% else %}
-            {% set lines = receipt.lines %}
-            {% set ungrouped = lines|filter(l => l.groupKey is empty) %}
-            {% set groupedLines = lines|filter(l => l.groupKey is not empty) %}
-
-            {% set receiptGroups = {} %}
-            {% for line in groupedLines %}
-                {% set gk = line.groupKey %}
-                {% set group = receiptGroups[gk]|default({ title: line.groupTitle ?? gk, items: {} }) %}
-                {% set it = line.itemTitle ?? '-' %}
-                {% set itemLines = group.items[it]|default([])|merge([line]) %}
-                {% set items = group.items|merge({ (it): itemLines }) %}
-                {% set receiptGroups = receiptGroups|merge({ (gk): { title: group.title, items: items } }) %}
-            {% endfor %}
-
-            {% for line in ungrouped %}
-                <div class="yw-mobile-line">
-                    <span>
-                        {{ line.label ?? '-' }}
-                        {% if line.description %}<br><small>{{ line.description }}</small>{% endif %}
-                    </span>
-                    <span>{{ (line.amountCents / 100)|format_currency('EUR', {rounding_mode: 'floor'}) }}</span>
-                </div>
-            {% endfor %}
-
-            {% for gk, group in receiptGroups %}
-                <div class="yw-mobile-group-title">
-                    <strong>{{ group.title }}</strong>
-                </div>
-
-                {% for itemTitle, lines in group.items %}
-                    <div class="yw-mobile-item-title">
-                        {{ itemTitle }}
-                    </div>
-
-                    {% for line in lines %}
-                        <div class="yw-mobile-line">
-                            <span>
-                                {{ line.label ?? line.name ?? '—' }}
-                                {% set desc = line.description ?? (line.meta ?? null) %}
-                                {% if desc %}
-                                    <br><small>{{ desc }}</small>
-                                {% endif %}
-                            </span>
-                            <span>{{ (line.amountCents / 100)|format_currency('EUR', {rounding_mode: 'floor'}) }}</span>
-                        </div>
-                    {% endfor %}
-                {% endfor %}
-            {% endfor %}
-        {% endif %}
+    <div class="yw-mobile-body" id="wizard-receipt-mobile-body">
+        <div>
+            {% include '@YiggleFormWizard/components/wizard/_receipt_mobile_body.html.twig' with { receipt: receipt } only %}
+        </div>
     </div>
 </div>

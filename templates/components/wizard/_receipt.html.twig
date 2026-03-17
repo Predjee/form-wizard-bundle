@@ -5,60 +5,40 @@
         <div class="yw-receipt-title">{{ 'yiggle_form_wizard.wizard.receipt.title'|trans }}</div>
     </div>
 
-    {% if receipt is not defined or receipt is null or (receipt.lines is empty) %}
+    {% if receipt.isEmpty() %}
         <div class="yw-receipt-empty">{{ 'yiggle_form_wizard.wizard.receipt.empty'|trans }}</div>
     {% else %}
-        {% set lines = receipt.lines %}
-        {% set ungrouped = lines|filter(l => l.groupKey is empty) %}
-        {% set groupedLines = lines|filter(l => l.groupKey is not empty) %}
-
-        {% set receiptGroups = {} %}
-        {% for line in groupedLines %}
-            {% set gk = line.groupKey %}
-            {% set group = receiptGroups[gk]|default({ title: line.groupTitle ?? gk, items: {} }) %}
-            {% set it = line.itemTitle ?? '-' %}
-            {% set itemLines = group.items[it]|default([])|merge([line]) %}
-            {% set items = group.items|merge({ (it): itemLines }) %}
-            {% set receiptGroups = receiptGroups|merge({ (gk): { title: group.title, items: items } }) %}
-        {% endfor %}
-
-        {% if ungrouped|length > 0 %}
+        {% if receipt.ungroupedLines|length > 0 %}
             <div class="yw-receipt-group">
                 <ul class="yw-receipt-lines">
-                    {% for line in ungrouped %}
+                    {% for line in receipt.ungroupedLines %}
                         <li class="yw-receipt-line">
                             <div>
-                                {{ line.label ?? '-' }}
+                                {{ line.label }}
                                 {% if line.description %}<small>{{ line.description }}</small>{% endif %}
                             </div>
-                            <div>{{ (line.amountCents / 100)|format_currency('EUR', {rounding_mode:'floor'}) }}</div>
+                            <div>{{ (line.amountCents / 100)|format_currency('EUR', {rounding_mode: 'floor'}) }}</div>
                         </li>
                     {% endfor %}
                 </ul>
             </div>
         {% endif %}
 
-        {% for gk, group in receiptGroups %}
+        {% for group in receipt.groupedLines %}
             <div class="yw-receipt-group">
                 <div class="yw-receipt-group-title">
                     <strong>{{ group.title }}</strong>
                 </div>
 
-                {% for itemTitle, lines in group.items %}
+                {% for item in group.items %}
                     <div class="yw-receipt-group-item">
-                        <div class="yw-receipt-group-item-title">
-                            {{ itemTitle }}
-                        </div>
-
+                        <div class="yw-receipt-group-item-title">{{ item.title }}</div>
                         <ul class="yw-receipt-lines">
-                            {% for line in lines %}
+                            {% for line in item.lines %}
                                 <li class="yw-receipt-line">
                                     <div>
-                                        {{ line.label ?? line.name ?? '—' }}
-                                        {% set desc = line.description ?? (line.meta ?? null) %}
-                                        {% if desc %}
-                                            <small>{{ desc }}</small>
-                                        {% endif %}
+                                        {{ line.label }}
+                                        {% if line.description %}<small>{{ line.description }}</small>{% endif %}
                                     </div>
                                     <div>{{ (line.amountCents / 100)|format_currency('EUR', {rounding_mode: 'floor'}) }}</div>
                                 </li>
@@ -73,7 +53,7 @@
     <div class="yw-receipt-total">
         <span>{{ 'yiggle_form_wizard.wizard.receipt.total'|trans }}</span>
         <span class="yw-receipt-total-value">
-            {{ ((receipt.totalInCents ?? 0) / 100)|format_currency('EUR', {rounding_mode: 'floor'}) }}
+            {{ (receipt.totalInCents / 100)|format_currency('EUR', {rounding_mode: 'floor'}) }}
         </span>
     </div>
 </div>

@@ -1,15 +1,25 @@
 <turbo-stream action="replace" target="wizard-receipt-container">
     <template>
         <div id="wizard-receipt-container" class="yw-receipt">
-            {% include '@YiggleFormWizard/components/wizard/_receipt.html.twig' %}
+            {% include '@YiggleFormWizard/components/wizard/_receipt.html.twig' with { receipt: receipt } only %}
         </div>
     </template>
 </turbo-stream>
 
 <turbo-stream action="replace" target="wizard-receipt-container-mobile">
     <template>
-        <div id="wizard-receipt-container-mobile">
-            <span>{{ ((receipt.totalInCents ?? 0) / 100)|format_currency('EUR') }}</span>
+        <span class="yw-mobile-total-value" id="wizard-receipt-container-mobile">
+            {{ (receipt.totalInCents / 100)|format_currency('EUR', {rounding_mode: 'floor'}) }}
+        </span>
+    </template>
+</turbo-stream>
+
+<turbo-stream action="replace" target="wizard-receipt-mobile-body">
+    <template>
+        <div class="yw-mobile-body" id="wizard-receipt-mobile-body">
+            <div>
+                {% include '@YiggleFormWizard/components/wizard/_receipt_mobile_body.html.twig' with { receipt: receipt } only %}
+            </div>
         </div>
     </template>
 </turbo-stream>

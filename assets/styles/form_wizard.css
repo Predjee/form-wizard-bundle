@@ -500,10 +500,6 @@
     padding-left: 0;
 }
 
-/* ==========================================================================
-   Mobile receipt
-   ========================================================================== */
-
 .yw-shell .yw-receipt-mobile {
     display: block;
     position: fixed;
@@ -511,8 +507,8 @@
     right: 0;
     bottom: 0;
     z-index: 1000;
-    background: #fff;
-    border-top: 1px solid var(--yw-border);
+    background: #ffffff;
+    border-top: 1px solid var(--yw-border, #e2e8f0);
     box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.1);
 }
 
@@ -532,31 +528,58 @@
     justify-content: space-between;
     align-items: center;
     cursor: pointer;
+    user-select: none;
+    background: #ffffff;
+    position: relative;
+    z-index: 2;
 }
 
 .yw-shell .yw-mobile-total-label {
     font-size: 13px;
     font-weight: 700;
-    color: var(--yw-muted);
+    color: var(--yw-muted, #64748b);
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .yw-shell .yw-mobile-total-label::after {
-    content: " ▼";
+    content: "▼";
     font-size: 10px;
-    transition: transform 0.3s;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: inline-block;
 }
 
+.yw-shell .yw-mobile-total-value {
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--yw-primary, #000);
+}
+
 .yw-shell .yw-mobile-body {
-    max-height: 0;
+    display: grid;
+    grid-template-rows: 0fr; /* Start op 0 hoogte */
+    transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     overflow: hidden;
-    transition: max-height 0.2s ease-out;
+    background: #ffffff;
+}
+
+.yw-shell .yw-mobile-body > div {
+    min-height: 0;
+    visibility: hidden;
+    transition: visibility 0.3s;
+    padding: 0 20px;
 }
 
 .yw-shell #yw-receipt-toggle:checked ~ .yw-mobile-body {
-    max-height: 60vh;
-    padding: 0 20px 20px;
+    grid-template-rows: 1fr;
+    max-height: 65vh;
     overflow-y: auto;
+}
+
+.yw-shell #yw-receipt-toggle:checked ~ .yw-mobile-body > div {
+    visibility: visible;
+    padding-bottom: 24px;
 }
 
 .yw-shell #yw-receipt-toggle:checked ~ .yw-mobile-header .yw-mobile-total-label::after {
@@ -566,25 +589,48 @@
 .yw-shell .yw-mobile-line {
     display: flex;
     justify-content: space-between;
+    align-items: flex-start;
     gap: 16px;
     padding: 12px 0;
     border-bottom: 1px solid #f1f5f9;
+    font-size: 14px;
+}
+
+.yw-shell .yw-mobile-line span:first-child {
+    color: var(--yw-text, #1e293b);
+}
+
+.yw-shell .yw-mobile-line small {
+    display: block;
+    color: var(--yw-muted, #64748b);
+    font-size: 12px;
+    margin-top: 2px;
 }
 
 .yw-shell .yw-mobile-group-title {
-    margin-top: 0.75rem;
-    font-weight: 600;
+    margin-top: 20px;
+    padding-bottom: 8px;
+    font-weight: 700;
+    font-size: 15px;
+    border-bottom: 2px solid #f1f5f9;
 }
 
 .yw-shell .yw-mobile-item-title {
-    margin-top: 0.5rem;
-    opacity: 0.85;
-    font-weight: 500;
+    margin-top: 12px;
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--yw-muted, #64748b);
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
 }
 
-.yw-shell .yw-mobile-line-meta {
-    opacity: 0.75;
-    font-size: 0.875rem;
+.yw-shell .yw-mobile-body::-webkit-scrollbar {
+    width: 4px;
+}
+
+.yw-shell .yw-mobile-body::-webkit-scrollbar-thumb {
+    background: #e2e8f0;
+    border-radius: 10px;
 }
 
 /* ==========================================================================
