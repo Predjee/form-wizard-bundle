@@ -3,16 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        @media only screen and (max-width: 600px) {
+            .stack-mobile {
+                display: block !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                padding-left: 0 !important;
+                padding-right: 0 !important;
+                box-sizing: border-box !important;
+            }
+            .container-padding {
+                padding: 20px 16px !important;
+            }
+            .sub-stack {
+                display: block !important;
+                width: 100% !important;
+            }
+        }
+    </style>
 </head>
 <body style="margin:0; padding:0; background-color:#f8fafc; font-family:sans-serif;">
 
-<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f8fafc; padding:32px 16px;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f8fafc; padding:32px 0;">
     <tr>
         <td align="center">
             <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px; width:100%; background-color:#ffffff; border-radius:16px; border:1px solid #e2e8f0; overflow:hidden;">
                 <tr><td style="background-color:#a3c644; padding:6px 0;">&nbsp;</td></tr>
                 <tr>
-                    <td style="padding:32px 40px;">
+                    <td class="container-padding" style="padding:32px 40px;">
                         <h1 style="margin:0 0 20px; font-size:22px; color:#0f172a;">{{ wizard.title }}</h1>
 
                         {% if introText %}
@@ -27,7 +46,6 @@
                             <table width="100%" cellpadding="0" cellspacing="0" border="0" style="table-layout: fixed; width: 100%;">
                                 {% set rowFields = [] %}{% set rowTotal = 0 %}
                                 {% for field in fields %}
-                                    {# Als het volgende veld een Deelnemers-blok (iterable) is, sluiten we de huidige rij eerst af #}
                                     {% set nextIsComplex = field.value is iterable %}
 
                                     {% if ((rowTotal + field.width) > 12 or nextIsComplex) and rowFields|length > 0 %}
@@ -38,7 +56,6 @@
                                     {% set rowFields = rowFields|merge([field]) %}
                                     {% set rowTotal = rowTotal + field.width %}
 
-                                    {# Als we net een complex veld hebben toegevoegd, renderen we die rij direct #}
                                     {% if nextIsComplex %}
                                         {{ _self.render_row(rowFields) }}
                                         {% set rowFields = [] %}{% set rowTotal = 0 %}
@@ -68,10 +85,9 @@
     <tr>
         {% for rf in rowFields %}
             {% set isComplex = rf.value is iterable %}
-            {# De TD krijgt 100% breedte als het complex is, anders de berekende breedte #}
             {% set pct = isComplex ? 100 : ((rf.width / 12) * 100)|round %}
 
-            <td width="{{ pct }}%" {% if isComplex %}colspan="12"{% endif %} valign="top" style="padding:0 4px 12px 4px; width: {{ pct }}%;">
+            <td class="stack-mobile" width="{{ pct }}%" {% if isComplex %}colspan="12"{% endif %} valign="top" style="padding:0 4px 12px 4px; width: {{ pct }}%;">
                 <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:14px 16px;">
                     <div style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; margin-bottom:6px; letter-spacing:0.05em;">
                         {{ rf.label }}
@@ -85,15 +101,15 @@
                             {% for subFields in items %}
                                 <div style="background:#fff; border:1px solid #cbd5e1; border-radius:6px; padding:12px; margin-top:8px;">
                                     <table width="100%" cellpadding="0" cellspacing="0" border="0" style="width: 100%; table-layout: fixed;">
-                                        <tr>
+                                        <tr class="sub-stack">
                                             {% set subRowTotal = 0 %}
                                             {% for subField in subFields %}
                                             {% if subRowTotal + subField.width > 12 %}
-                                        </tr><tr>{% set subRowTotal = 0 %}
+                                        </tr><tr class="sub-stack">{% set subRowTotal = 0 %}
                                             {% endif %}
 
                                             {% set subPct = ((subField.width / 12) * 100)|round %}
-                                            <td width="{{ subPct }}%" valign="top" style="padding-bottom:10px; padding-right:8px; width: {{ subPct }}%;">
+                                            <td class="stack-mobile" width="{{ subPct }}%" valign="top" style="padding-bottom:10px; padding-right:8px; width: {{ subPct }}%;">
                                                 <div style="font-size:10px; font-weight:700; color:#94a3b8; text-transform:uppercase; line-height: 1.2; margin-bottom: 2px;">
                                                     {{ subField.label }}
                                                 </div>
