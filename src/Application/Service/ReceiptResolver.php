@@ -32,10 +32,8 @@ final readonly class ReceiptResolver
     }
 
     /**
-     * @param WizardFormInterface $wizard
-     * @param array|null $savedArray
-     * @param array $postData
-     * @return WizardReceiptInterface
+     * @param array<string, mixed>|null $savedArray
+     * @param array<string, mixed> $postData
      */
     public function fromSessionWithPost(
         WizardFormInterface $wizard,

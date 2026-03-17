@@ -45,13 +45,13 @@ final readonly class WizardRuntimeResult
         int $status = Response::HTTP_OK,
     ): self {
         return new self(false, null, [
-            'wizard'          => $wizard,
-            'wizardId'        => $wizardId,
-            'form'            => $form,
-            'receipt'         => $receipt,
-            'isCompleted'     => $isCompleted,
+            'wizard' => $wizard,
+            'wizardId' => $wizardId,
+            'form' => $form,
+            'receipt' => $receipt,
+            'isCompleted' => $isCompleted,
             'variantTemplate' => $variantTemplate,
-            'showReceipt'     => $showReceipt,
+            'showReceipt' => $showReceipt,
         ], $status);
     }
 }

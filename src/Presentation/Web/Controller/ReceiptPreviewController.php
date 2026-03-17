@@ -39,7 +39,7 @@ final class ReceiptPreviewController extends AbstractController
 
         return $this->render('@YiggleFormWizard/streams/receipt/update.stream.html.twig', [
             'receipt' => $receipt,
-            'wizard'  => $wizard,
+            'wizard' => $wizard,
         ], new TurboStreamResponse());
     }
 }
