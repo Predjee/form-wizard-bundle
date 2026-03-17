@@ -207,7 +207,16 @@ final readonly class EmailNotifier implements WizardNotifierInterface
             $name = $fieldConfig['name'] ?? null;
             if (is_string($name) && array_key_exists($name, $entry)) {
                 $rawValue = $entry[$name];
-                $displayValue = is_array($rawValue) ? implode(', ', array_filter($rawValue, 'is_scalar')) : $rawValue;
+
+                // Veiligere displayValue check
+                if (is_array($rawValue)) {
+                    $scalars = array_filter($rawValue, 'is_scalar');
+                    $displayValue = count($scalars) === count($rawValue)
+                        ? implode(', ', $scalars)
+                        : json_encode($rawValue);
+                } else {
+                    $displayValue = $rawValue;
+                }
 
                 if (! empty($fieldConfig['options']) && is_array($fieldConfig['options'])) {
                     foreach ($fieldConfig['options'] as $option) {
@@ -229,9 +238,17 @@ final readonly class EmailNotifier implements WizardNotifierInterface
 
         foreach ($entry as $key => $value) {
             if (! in_array($key, $processedKeys, true)) {
+                $finalValue = $value;
+                if (is_array($value)) {
+                    $scalars = array_filter($value, 'is_scalar');
+                    $finalValue = count($scalars) === count($value)
+                        ? implode(', ', $scalars)
+                        : json_encode($value);
+                }
+
                 $mapped[] = [
                     'label' => ucfirst($key),
-                    'value' => is_array($value) ? implode(', ', array_filter($value, 'is_scalar')) : $value,
+                    'value' => $finalValue,
                     'width' => 12,
                 ];
             }
