@@ -92,6 +92,9 @@ final readonly class EmailNotifier implements WizardNotifierInterface
         $this->mailer->send($email);
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     private function findValueRecursive(array $data, string $targetKey): ?string
     {
         foreach ($data as $key => $value) {
@@ -99,6 +102,7 @@ final readonly class EmailNotifier implements WizardNotifierInterface
                 return $value;
             }
             if (is_array($value)) {
+                /** @var array<string, mixed> $value */
                 $result = $this->findValueRecursive($value, $targetKey);
                 if ($result) {
                     return $result;
@@ -168,6 +172,7 @@ final readonly class EmailNotifier implements WizardNotifierInterface
         }
 
         $config = $field->getConfig();
+        /** @var array<int, array<string, mixed>> $rowFields */
         $rowFields = $config['rowFields'] ?? [];
 
         if (! empty($rowFields)) {
@@ -175,17 +180,24 @@ final readonly class EmailNotifier implements WizardNotifierInterface
             if (array_is_list($value)) {
                 foreach ($value as $entry) {
                     if (is_array($entry)) {
+                        /** @var array<string, mixed> $entry */
                         $formattedList[] = $this->mapEntryToConfig($rowFields, $entry);
                     }
                 }
                 return $formattedList;
             }
+            /** @var array<string, mixed> $value */
             return $this->mapEntryToConfig($rowFields, $value);
         }
 
         return $value;
     }
 
+    /**
+     * @param array<int, array<string, mixed>> $rowFields
+     * @param array<string, mixed> $entry
+     * @return array<int, array{label: string, value: mixed, width: int}>
+     */
     private function mapEntryToConfig(array $rowFields, array $entry): array
     {
         $mapped = [];
