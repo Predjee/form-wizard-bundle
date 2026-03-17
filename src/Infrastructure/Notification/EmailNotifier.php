@@ -208,14 +208,12 @@ final readonly class EmailNotifier implements WizardNotifierInterface
             if (is_string($name) && array_key_exists($name, $entry)) {
                 $rawValue = $entry[$name];
 
-                // Veiligere displayValue check
+                $displayValue = $rawValue;
                 if (is_array($rawValue)) {
-                    $scalars = array_filter($rawValue, 'is_scalar');
-                    $displayValue = count($scalars) === count($rawValue)
-                        ? implode(', ', $scalars)
-                        : json_encode($rawValue);
-                } else {
-                    $displayValue = $rawValue;
+                    $displayValue = $this->renderValueSafe($rawValue);
+                    if ($displayValue === false) {
+                        continue;
+                    }
                 }
 
                 if (! empty($fieldConfig['options']) && is_array($fieldConfig['options'])) {
@@ -238,22 +236,28 @@ final readonly class EmailNotifier implements WizardNotifierInterface
 
         foreach ($entry as $key => $value) {
             if (! in_array($key, $processedKeys, true)) {
-                $finalValue = $value;
-                if (is_array($value)) {
-                    $scalars = array_filter($value, 'is_scalar');
-                    $finalValue = count($scalars) === count($value)
-                        ? implode(', ', $scalars)
-                        : json_encode($value);
-                }
-
                 $mapped[] = [
                     'label' => ucfirst($key),
-                    'value' => $finalValue,
+                    'value' => is_array($value) ? $this->renderValueSafe($value) : $value,
                     'width' => 12,
                 ];
             }
         }
 
         return $mapped;
+    }
+
+    private function renderValueSafe(mixed $value): string|false
+    {
+        if (! is_array($value)) {
+            return (string) $value;
+        }
+
+        $scalars = array_filter($value, 'is_scalar');
+        if (count($scalars) === count($value)) {
+            return implode(', ', $scalars);
+        }
+
+        return json_encode($value);
     }
 }
