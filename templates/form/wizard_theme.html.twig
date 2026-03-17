@@ -89,38 +89,6 @@
     {{ parent() }}
 {% endblock %}
 
-{% block checkbox_row %}
-    <div class="yw-field" style="--yw-col: 12;">
-        <div class="yw-checkbox-card">
-            {{ form_widget(form) }}
-            <label class="yw-checkbox-label" for="{{ form.vars.id }}">
-                {{ form.vars.label|trans({}, form.vars.translation_domain ?? 'yiggle_form_wizard') }}
-            </label>
-        </div>
-        {{ form_errors(form) }}
-        {{ form_help(form) }}
-    </div>
-{% endblock %}
-
-{% block form_help %}
-    {% if help %}
-        {% set help_attr = help_attr|merge({
-            class: (help_attr.class|default('') ~ ' yw-help')|trim
-        }) %}
-        {{ parent() }}
-    {% endif %}
-{% endblock %}
-
-{% block form_errors %}
-    {% if errors|length > 0 %}
-        <ul class="yw-errors">
-            {% for error in errors %}
-                <li id="{{ id ~ '_error' ~ loop.index }}" class="yw-error">{{ error.message }}</li>
-            {% endfor %}
-        </ul>
-    {% endif %}
-{% endblock %}
-
 {% block wizard_repeatable_group_row %}
     {% trans_default_domain 'yiggle_form_wizard' %}
     {% set config = form.vars.fields_config ?? {} %}
@@ -187,4 +155,66 @@
 
         {{ form_errors(form) }}
     </div>
+{% endblock %}
+
+{% block choice_row %}
+    {% set col = form.vars.row_attr['data-yw-width'] ?? form.vars.attr['data-yw-width'] ?? 12 %}
+    <div class="yw-field" style="--yw-col: {{ col }};">
+        {{ form_label(form) }}
+        <div class="yw-control">
+            {{ form_widget(form) }}
+        </div>
+        {{ form_errors(form) }}
+        {{ form_help(form) }}
+    </div>
+{% endblock %}
+
+{% block choice_widget_expanded %}
+    <div {{ block('widget_container_attributes') }} class="yw-selection-cards-container">
+        {% for child in form %}
+            <label class="yw-selection-card">
+                {{ form_widget(child, { attr: { class: 'yw-selection-input' } }) }}
+                <span class="yw-selection-label">
+                    {{ child.vars.label|trans({}, choice_translation_domain) }}
+                </span>
+            </label>
+        {% endfor %}
+    </div>
+{% endblock %}
+
+{% block checkbox_row %}
+    {% set col = form.vars.row_attr['data-yw-width'] ?? form.vars.attr['data-yw-width'] ?? 12 %}
+    <div class="yw-field" style="--yw-col: {{ col }};">
+        <div class="yw-control">
+            <label class="yw-selection-card">
+                {{ form_widget(form, { attr: { class: 'yw-selection-input' } }) }}
+                <span class="yw-selection-label">
+                    {{ form.vars.label|trans({}, translation_domain) }}
+                </span>
+            </label>
+        </div>
+        {{ form_errors(form) }}
+        {{ form_help(form) }}
+    </div>
+{% endblock %}
+
+{% block form_help %}
+    {% if help %}
+        <div id="{{ id ~ '_help' }}" class="yw-help">
+            {{ help|trans({}, translation_domain) }}
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block form_errors %}
+    {% if errors|length > 0 %}
+        <div class="yw-errors">
+            {% for error in errors %}
+                <div id="{{ id ~ '_error' ~ loop.index }}" class="yw-error">
+                    <span class="yw-error-icon">!</span>
+                    {{ error.message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
 {% endblock %}

@@ -287,9 +287,144 @@
     resize: vertical;
 }
 
-/* Select arrow consistency (optional, if you use select.yw-input) */
 .yw-shell select.yw-input {
     background-image: none;
+}
+
+.yw-selection-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.yw-selection-cards-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+}
+
+.yw-selection-card {
+    display: flex;
+    align-items: center;
+    background: var(--yw-card);
+    border: 1px solid var(--yw-border);
+    border-radius: var(--yw-radius-md);
+    padding: 12px 16px;
+    min-height: 52px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%;
+    margin: 0;
+}
+
+.yw-selection-card:hover {
+    border-color: var(--yw-primary);
+    background: var(--yw-primary-soft);
+}
+
+.yw-selection-card .yw-selection-input {
+    width: 20px;
+    height: 20px;
+    margin: 0 14px 0 0;
+    cursor: pointer;
+    accent-color: var(--yw-primary);
+    border: 2px solid var(--yw-border);
+    flex-shrink: 0;
+}
+
+.yw-selection-card .yw-selection-label {
+    margin: 0;
+    font-weight: 500;
+    font-size: 16px;
+    color: var(--yw-text);
+    cursor: pointer;
+    line-height: 1.4;
+}
+
+.yw-selection-card:has(.yw-selection-input:checked) {
+    border-color: var(--yw-primary);
+    background: var(--yw-primary-soft);
+}
+
+.yw-field:has(.yw-errors) .yw-selection-card {
+    border-color: var(--yw-danger);
+    background: var(--yw-danger-bg);
+}
+
+.yw-selection-card:has(.yw-selection-input:checked) {
+    border-color: var(--yw-primary);
+    background: var(--yw-primary-soft);
+    box-shadow: 0 0 0 1px var(--yw-primary);
+}
+
+.yw-shell select.yw-input {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1.25rem;
+    padding-right: 2.5rem;
+    cursor: pointer;
+    color: var(--yw-text);
+}
+
+.yw-shell select.yw-input:invalid,
+.yw-shell select.yw-input option[value=""] {
+    color: var(--yw-muted);
+}
+
+.yw-help {
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--yw-muted);
+    line-height: 1.4;
+}
+
+.yw-errors {
+    margin-top: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.yw-error {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: var(--yw-danger-bg);
+    border: 1px solid var(--yw-danger-border);
+    border-radius: var(--yw-radius-md);
+    color: var(--yw-danger);
+    font-size: 0.875rem;
+    font-weight: 500;
+
+    .yw-error-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 18px;
+        height: 18px;
+        background: var(--yw-danger);
+        color: #fff;
+        border-radius: 50%;
+        font-size: 0.75rem;
+        font-weight: 700;
+        flex-shrink: 0;
+    }
+}
+
+.yw-field:has(.yw-errors) {
+    .yw-input,
+    .yw-selection-card {
+        border-color: var(--yw-danger);
+    }
+
+    .yw-label {
+        color: var(--yw-danger);
+    }
 }
 
 /* ==========================================================================
@@ -989,7 +1124,6 @@
     gap: 8px;
 }
 
-/* Badge (je had al iets; dit maakt ’m rustiger) */
 .yw-shell .yw-summary-badge{
     display: inline-flex;
     align-items: center;
@@ -1003,12 +1137,10 @@
     color: var(--yw-text);
 }
 
-/* Optional: highlight paid add-ons */
 .yw-shell .yw-summary-badge strong{
     font-weight: 900;
 }
 
-/* Make currency additions stand out a bit */
 .yw-shell .yw-summary-badge .yw-summary-price{
     color: var(--yw-muted);
     font-weight: 800;
