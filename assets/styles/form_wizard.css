@@ -41,7 +41,6 @@
     box-sizing: border-box;
 }
 
-/* Keep font decision at the shell root (not on *) */
 .yw-shell {
     font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     background: var(--yw-bg);
@@ -71,7 +70,7 @@
         border-radius: var(--yw-radius-xl);
         box-shadow: var(--yw-shadow-lg);
         border: 1px solid var(--yw-border);
-        overflow: hidden; /* helps rounded corners remain visible with inner areas */
+        overflow: hidden;
     }
 
     .yw-shell .yw-layout.yw-has-receipt .yw-aside {
@@ -231,7 +230,6 @@
         gap: 24px;
     }
 
-    /* Modern approach kept; if you need max compatibility, replace with classes */
     .yw-shell .yw-field {
         grid-column: span min(12, var(--yw-col, 12));
     }
@@ -245,7 +243,6 @@
     color: var(--yw-text);
 }
 
-/* Optional required marker (if you add markup for it) */
 .yw-shell .yw-required {
     margin-left: 4px;
     color: var(--yw-danger);
@@ -258,7 +255,7 @@
 
 .yw-shell .yw-input {
     width: 100%;
-    min-height: 52px;             /* use min-height; avoids some UA/button conflicts */
+    min-height: 52px;
     padding: 12px 16px;
     border-radius: var(--yw-radius-md);
     border: 1px solid var(--yw-border);
@@ -266,12 +263,8 @@
     font-size: 16px;
     line-height: 1.25;
     box-sizing: border-box;
-
-    /* "Reset-proof" vs frameworks */
     appearance: none;
     -webkit-appearance: none;
-
-    /* Prevent bootstrap shadows etc. */
     box-shadow: none;
     outline: none;
 }
@@ -281,81 +274,19 @@
     box-shadow: 0 0 0 4px rgba(163, 198, 68, 0.14);
 }
 
+.yw-shell .yw-input:invalid {
+    box-shadow: none !important;
+}
+
+.yw-shell .yw-input--valid {
+    border-color: var(--yw-primary) !important;
+    box-shadow: 0 0 0 4px var(--yw-primary-soft);
+}
+
 .yw-shell textarea.yw-input {
     height: auto;
     min-height: 120px;
     resize: vertical;
-}
-
-.yw-shell select.yw-input {
-    background-image: none;
-}
-
-.yw-selection-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.yw-selection-cards-container {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    width: 100%;
-}
-
-.yw-selection-card {
-    display: flex;
-    align-items: center;
-    background: var(--yw-card);
-    border: 1px solid var(--yw-border);
-    border-radius: var(--yw-radius-md);
-    padding: 12px 16px;
-    min-height: 52px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    width: 100%;
-    margin: 0;
-}
-
-.yw-selection-card:hover {
-    border-color: var(--yw-primary);
-    background: var(--yw-primary-soft);
-}
-
-.yw-selection-card .yw-selection-input {
-    width: 20px;
-    height: 20px;
-    margin: 0 14px 0 0;
-    cursor: pointer;
-    accent-color: var(--yw-primary);
-    border: 2px solid var(--yw-border);
-    flex-shrink: 0;
-}
-
-.yw-selection-card .yw-selection-label {
-    margin: 0;
-    font-weight: 500;
-    font-size: 16px;
-    color: var(--yw-text);
-    cursor: pointer;
-    line-height: 1.4;
-}
-
-.yw-selection-card:has(.yw-selection-input:checked) {
-    border-color: var(--yw-primary);
-    background: var(--yw-primary-soft);
-}
-
-.yw-field:has(.yw-errors) .yw-selection-card {
-    border-color: var(--yw-danger);
-    background: var(--yw-danger-bg);
-}
-
-.yw-selection-card:has(.yw-selection-input:checked) {
-    border-color: var(--yw-primary);
-    background: var(--yw-primary-soft);
-    box-shadow: 0 0 0 1px var(--yw-primary);
 }
 
 .yw-shell select.yw-input {
@@ -375,21 +306,88 @@
     color: var(--yw-muted);
 }
 
-.yw-help {
-    margin-top: 0.5rem;
-    font-size: 0.875rem;
-    color: var(--yw-muted);
+/* ==========================================================================
+   Selection list / cards
+   ========================================================================== */
+
+.yw-shell .yw-selection-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.yw-shell .yw-selection-cards-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+}
+
+.yw-shell .yw-selection-card {
+    display: flex;
+    align-items: center;
+    background: var(--yw-card);
+    border: 1px solid var(--yw-border);
+    border-radius: var(--yw-radius-md);
+    padding: 12px 16px;
+    min-height: 52px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%;
+    margin: 0;
+}
+
+.yw-shell .yw-selection-card:hover {
+    border-color: var(--yw-primary);
+    background: var(--yw-primary-soft);
+}
+
+.yw-shell .yw-selection-card:has(.yw-selection-input:checked) {
+    border-color: var(--yw-primary);
+    background: var(--yw-primary-soft);
+    box-shadow: 0 0 0 1px var(--yw-primary);
+}
+
+.yw-shell .yw-selection-card .yw-selection-input {
+    width: 20px;
+    height: 20px;
+    margin: 0 14px 0 0;
+    cursor: pointer;
+    accent-color: var(--yw-primary);
+    border: 2px solid var(--yw-border);
+    flex-shrink: 0;
+}
+
+.yw-shell .yw-selection-card .yw-selection-label {
+    margin: 0;
+    font-weight: 500;
+    font-size: 16px;
+    color: var(--yw-text);
+    cursor: pointer;
     line-height: 1.4;
 }
 
-.yw-errors {
-    margin-top: 0.5rem;
+/* ==========================================================================
+   Help + errors
+   ========================================================================== */
+
+.yw-shell .yw-help {
+    margin-top: 6px;
+    font-size: 0.875rem;
+    line-height: 1.3;
+    color: var(--yw-muted);
+}
+
+.yw-shell .yw-errors {
+    margin: 6px 0 0;
+    padding: 0;
+    list-style: none;
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
 }
 
-.yw-error {
+.yw-shell .yw-error {
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -400,31 +398,68 @@
     color: var(--yw-danger);
     font-size: 0.875rem;
     font-weight: 500;
-
-    .yw-error-icon {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 18px;
-        height: 18px;
-        background: var(--yw-danger);
-        color: #fff;
-        border-radius: 50%;
-        font-size: 0.75rem;
-        font-weight: 700;
-        flex-shrink: 0;
-    }
 }
 
-.yw-field:has(.yw-errors) {
-    .yw-input,
-    .yw-selection-card {
-        border-color: var(--yw-danger);
-    }
+.yw-shell .yw-error-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    background: var(--yw-danger);
+    color: #fff;
+    border-radius: 50%;
+    font-size: 0.75rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
 
-    .yw-label {
-        color: var(--yw-danger);
-    }
+/* ==========================================================================
+   Error states op velden
+   ========================================================================== */
+
+.yw-shell .yw-field:has(> .yw-errors) .yw-label,
+.yw-shell .yw-field:has(> .yw-control + .yw-errors) .yw-label,
+.yw-shell .yw-field:has(> .yw-control ~ .yw-errors) .yw-label {
+    color: var(--yw-danger);
+}
+
+.yw-shell .yw-field:has(> .yw-control + .yw-errors) .yw-input,
+.yw-shell .yw-field:has(> .yw-control ~ .yw-errors) .yw-input {
+    border-color: var(--yw-danger) !important;
+}
+
+.yw-shell .yw-field:has(> .yw-errors) .yw-selection-card {
+    border-color: var(--yw-danger) !important;
+    background: var(--yw-danger-bg);
+}
+
+/* ==========================================================================
+   Row action — onderdruk errors bij add/remove
+   ========================================================================== */
+
+.yw-shell turbo-frame[data-row-action="true"] .yw-errors {
+    display: none;
+}
+
+.yw-shell turbo-frame[data-row-action="true"] .yw-input,
+.yw-shell turbo-frame[data-row-action="true"] .yw-field:has(.yw-control + .yw-errors) .yw-input,
+.yw-shell turbo-frame[data-row-action="true"] .yw-field:has(.yw-control ~ .yw-errors) .yw-input {
+    border-color: var(--yw-border) !important;
+}
+
+.yw-shell turbo-frame[data-row-action="true"] .yw-label,
+.yw-shell turbo-frame[data-row-action="true"] .yw-field:has(> .yw-errors) .yw-label,
+.yw-shell turbo-frame[data-row-action="true"] .yw-field:has(> .yw-control + .yw-errors) .yw-label,
+.yw-shell turbo-frame[data-row-action="true"] .yw-field:has(> .yw-control ~ .yw-errors) .yw-label {
+    color: var(--yw-text) !important;
+}
+
+.yw-shell turbo-frame[data-row-action="true"] .yw-selection-card,
+.yw-shell turbo-frame[data-row-action="true"] .yw-field .yw-selection-card:has(.yw-errors) {
+    border-color: var(--yw-border) !important;
+    background: var(--yw-card) !important;
+    box-shadow: none !important;
 }
 
 /* ==========================================================================
@@ -447,7 +482,6 @@
     gap: 12px;
 }
 
-/* Main button primitive */
 .yw-shell .yw-btn {
     width: 100%;
     padding: 14px 24px;
@@ -457,12 +491,9 @@
     text-align: center;
     border: 1px solid transparent;
     transition: background-color 0.2s, border-color 0.2s, transform 0.1s;
-
-    /* Reset-proof */
     appearance: none;
     -webkit-appearance: none;
     box-shadow: none;
-
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -519,7 +550,6 @@
     font-size: 13px;
     text-decoration: underline;
     cursor: pointer;
-
     appearance: none;
     -webkit-appearance: none;
 }
@@ -635,6 +665,10 @@
     padding-left: 0;
 }
 
+/* ==========================================================================
+   Mobile receipt
+   ========================================================================== */
+
 .yw-shell .yw-receipt-mobile {
     display: block;
     position: fixed;
@@ -643,7 +677,7 @@
     bottom: 0;
     z-index: 1000;
     background: #ffffff;
-    border-top: 1px solid var(--yw-border, #e2e8f0);
+    border-top: 1px solid var(--yw-border);
     box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.1);
 }
 
@@ -672,7 +706,7 @@
 .yw-shell .yw-mobile-total-label {
     font-size: 13px;
     font-weight: 700;
-    color: var(--yw-muted, #64748b);
+    color: var(--yw-muted);
     display: flex;
     align-items: center;
     gap: 8px;
@@ -688,12 +722,12 @@
 .yw-shell .yw-mobile-total-value {
     font-weight: 700;
     font-size: 16px;
-    color: var(--yw-primary, #000);
+    color: var(--yw-primary);
 }
 
 .yw-shell .yw-mobile-body {
     display: grid;
-    grid-template-rows: 0fr; /* Start op 0 hoogte */
+    grid-template-rows: 0fr;
     transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     overflow: hidden;
     background: #ffffff;
@@ -732,12 +766,12 @@
 }
 
 .yw-shell .yw-mobile-line span:first-child {
-    color: var(--yw-text, #1e293b);
+    color: var(--yw-text);
 }
 
 .yw-shell .yw-mobile-line small {
     display: block;
-    color: var(--yw-muted, #64748b);
+    color: var(--yw-muted);
     font-size: 12px;
     margin-top: 2px;
 }
@@ -754,7 +788,7 @@
     margin-top: 12px;
     font-weight: 600;
     font-size: 13px;
-    color: var(--yw-muted, #64748b);
+    color: var(--yw-muted);
     text-transform: uppercase;
     letter-spacing: 0.025em;
 }
@@ -813,12 +847,10 @@
     gap: 10px;
 }
 
-/* Remove button styling (keep scoped) */
 .yw-shell .yw-btn-remove,
 .yw-shell .yw-repeatable-row-actions button {
     appearance: none;
     -webkit-appearance: none;
-
     border: 1px solid transparent;
     background: transparent;
     color: var(--yw-danger);
@@ -851,14 +883,12 @@
     margin-top: 14px;
 }
 
-/* Add button styling (repeatable) */
 .yw-shell .yw-btn-add,
 .yw-shell .yw-repeatable-actions button,
 .yw-shell .yw-repeatable-actions input[type="submit"],
 .yw-shell .yw-repeatable-actions input[type="button"] {
     appearance: none;
     -webkit-appearance: none;
-
     border: 1px solid var(--yw-border);
     background: #fff;
     color: var(--yw-text);
@@ -870,7 +900,6 @@
     width: 100%;
     text-align: center;
     box-shadow: none;
-
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -902,12 +931,15 @@
     }
 }
 
-/* Checkbox card */
+/* ==========================================================================
+   Checkbox card
+   ========================================================================== */
+
 .yw-shell .yw-checkbox-card {
     display: flex;
     gap: 12px;
     align-items: center;
-    padding: 14px 14px;
+    padding: 14px;
     border: 1px solid var(--yw-border);
     border-radius: var(--yw-radius-md);
     background: #fff;
@@ -919,7 +951,7 @@
     cursor: pointer;
 }
 
-/* Error coloring inside repeatables */
+/* Error coloring inside repeatables (framework overrides) */
 .yw-shell .yw-repeatable-row .form-error-message,
 .yw-shell .yw-repeatable-row .invalid-feedback,
 .yw-shell .yw-repeatable-row ul li {
@@ -963,6 +995,10 @@
     border-top: 1px solid var(--yw-border);
 }
 
+.yw-shell .yw-inline__actions {
+    margin-top: 1rem;
+}
+
 .yw-shell .yw-minimal {
     max-width: 100%;
     margin: 0;
@@ -978,32 +1014,6 @@
 
 .yw-shell .yw-minimal__actions {
     margin-top: 24px;
-}
-
-.yw-shell .yw-inline__actions {
-    margin-top: 1rem;
-}
-
-/* ==========================================================================
-   Help + errors
-   ========================================================================== */
-
-.yw-shell .yw-help {
-    margin-top: 6px;
-    font-size: 0.875rem;
-    line-height: 1.3;
-    color: var(--yw-muted);
-}
-
-.yw-shell .yw-errors {
-    margin: 6px 0 0;
-    padding: 0;
-    list-style: none;
-}
-
-.yw-shell .yw-error {
-    font-size: 0.875rem;
-    color: var(--yw-danger);
 }
 
 /* ==========================================================================
@@ -1033,98 +1043,83 @@
     min-width: 200px;
 }
 
-.yw-shell .yw-summary-badge {
-    display: inline-block;
-    background: #f1f5f9;
-    border: 1px solid #e2e8f0;
-    padding: 0.25rem 0.75rem;
-    border-radius: 999px;
-    margin: 0.25rem;
-    font-size: 0.875rem;
-}
-
-/* ===== Summary / confirmation ===== */
-.yw-shell .yw-summary-body{
+.yw-shell .yw-summary-body {
     margin-top: 24px;
     display: grid;
     gap: 18px;
 }
 
-/* “Card” per blok */
-.yw-shell .yw-summary-section{
+.yw-shell .yw-summary-section {
     border: 1px solid var(--yw-border);
     border-radius: var(--yw-radius-lg);
     background: #fff;
     padding: 16px;
 }
 
-/* Details list */
-.yw-shell .yw-summary-list{
+.yw-shell .yw-summary-list {
     margin: 0;
 }
 
-.yw-shell .yw-summary-row{
+.yw-shell .yw-summary-row {
     display: grid;
     grid-template-columns: 1fr auto;
     gap: 16px;
     align-items: baseline;
     padding: 10px 0;
-    border-top: 1px solid rgba(226,232,240,.8);
+    border-top: 1px solid rgba(226, 232, 240, 0.8);
 }
 
-.yw-shell .yw-summary-row:first-child{
+.yw-shell .yw-summary-row:first-child {
     border-top: 0;
     padding-top: 0;
 }
 
-.yw-shell .yw-summary-row dt{
+.yw-shell .yw-summary-row dt {
     margin: 0;
     font-weight: 700;
     color: var(--yw-text);
 }
 
-.yw-shell .yw-summary-row dd{
+.yw-shell .yw-summary-row dd {
     margin: 0;
     font-weight: 800;
     font-variant-numeric: tabular-nums;
     color: var(--yw-text);
 }
 
-/* Group titles */
-.yw-shell .yw-summary-group-title{
+.yw-shell .yw-summary-group-title {
     margin: 0 0 12px;
     font-size: 16px;
     font-weight: 900;
     color: var(--yw-text);
 }
 
-/* Per item (e.g. “#1”) */
-.yw-shell .yw-summary-item{
+.yw-shell .yw-summary-item {
     padding-top: 12px;
     margin-top: 12px;
-    border-top: 1px solid rgba(226,232,240,.8);
+    border-top: 1px solid rgba(226, 232, 240, 0.8);
 }
 
-.yw-shell .yw-summary-item:first-of-type{
+.yw-shell .yw-summary-item:first-of-type {
     border-top: 0;
     margin-top: 0;
     padding-top: 0;
 }
 
-.yw-shell .yw-summary-item-label{
+.yw-shell .yw-summary-item-label {
     margin: 0 0 10px;
     font-size: 14px;
     font-weight: 800;
     color: var(--yw-text);
 }
 
-.yw-shell .yw-summary-item-details{
+.yw-shell .yw-summary-item-details {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
 }
 
-.yw-shell .yw-summary-badge{
+.yw-shell .yw-summary-badge {
     display: inline-flex;
     align-items: center;
     gap: 8px;
@@ -1137,11 +1132,11 @@
     color: var(--yw-text);
 }
 
-.yw-shell .yw-summary-badge strong{
+.yw-shell .yw-summary-badge strong {
     font-weight: 900;
 }
 
-.yw-shell .yw-summary-badge .yw-summary-price{
+.yw-shell .yw-summary-badge .yw-summary-price {
     color: var(--yw-muted);
     font-weight: 800;
 }

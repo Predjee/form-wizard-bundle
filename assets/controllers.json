@@ -4,6 +4,10 @@
       "receipt-trigger": {
         "enabled": false,
         "fetch": "eager"
+      },
+      "form-validation": {
+        "enabled": false,
+        "fetch": "eager"
       }
     }
   },

@@ -7,9 +7,7 @@
             {{ form_row(child) }}
         {% endfor %}
 
-        {% if isRowAction is not defined or not isRowAction %}
-            {{ form_errors(form) }}
-        {% endif %}
+        {{ form_errors(form) }}
     {% else %}
         {% set col = form.vars.row_attr['data-yw-width']
             ?? form.vars.attr['data-yw-width']
@@ -41,10 +39,8 @@
                 {{ form_widget(form, { attr: widget_attr }) }}
             </div>
 
-            {% if isRowAction is not defined or not isRowAction %}
-                {{ form_errors(form) }}
-                {{ form_help(form) }}
-            {% endif %}
+            {{ form_errors(form) }}
+            {{ form_help(form) }}
         </div>
     {% endif %}
 {% endblock %}
@@ -120,7 +116,6 @@
 
                                     <div class="yw-repeatable-row-actions">
                                         {{ form_widget(child.remove_row, {
-                                            isRowAction: true,
                                             attr: {
                                                 'data-turbo-frame': 'frame_' ~ form.vars.id,
                                                 'formnovalidate': 'formnovalidate'
@@ -143,7 +138,6 @@
 
                 <div class="yw-repeatable-actions">
                     {{ form_widget(form.add_row, {
-                        isRowAction: true,
                         attr: {
                             'data-turbo-frame': 'frame_' ~ form.vars.id,
                             'formnovalidate': 'formnovalidate'
@@ -208,7 +202,7 @@
 
 {% block form_errors %}
     {% if errors|length > 0 %}
-        <div class="yw-errors">
+        <div class="yw-errors" id="{{ id }}_errors">
             {% for error in errors %}
                 <div id="{{ id ~ '_error' ~ loop.index }}" class="yw-error">
                     <span class="yw-error-icon">!</span>
@@ -218,3 +212,4 @@
         </div>
     {% endif %}
 {% endblock %}
+

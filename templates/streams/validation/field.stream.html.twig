@@ -1,0 +1,17 @@
+{% if valid %}
+    <turbo-stream action="remove" target="{{ field_id }}_errors">
+    </turbo-stream>
+{% else %}
+    <turbo-stream action="replace" target="{{ field_id }}_errors">
+        <template>
+            <div class="yw-errors" id="{{ field_id }}_errors">
+                {% for error in errors %}
+                    <div class="yw-error">
+                        <span class="yw-error-icon">!</span>
+                        {{ error }}
+                    </div>
+                {% endfor %}
+            </div>
+        </template>
+    </turbo-stream>
+{% endif %}

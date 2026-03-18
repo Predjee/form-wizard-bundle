@@ -1,10 +1,14 @@
-<div class="yw-card">
+<div class="yw-card"
+     data-controller="field-validation"
+     data-field-validation-url-value="{{ path('fw_wizard_validate', { id: wizardId }) }}"
+>
     {{ form_start(form, {
         attr: {
-            'data-controller': 'yiggle--form-wizard-bundle--receipt-trigger',
             'data-yiggle--form-wizard-bundle--receipt-trigger-url-value': path('fw_wizard_preview', { id: wizardId }),
             'data-yiggle--form-wizard-bundle--receipt-trigger-target': 'form',
-            'data-action': 'turbo:submit-end->yiggle--form-wizard-bundle--receipt-trigger#submitEnd'
+            'data-action': 'turbo:submit-end->yiggle--form-wizard-bundle--receipt-trigger#submitEnd',
+            'data-controller': 'yiggle--form-wizard-bundle--receipt-trigger yiggle--form-wizard-bundle--field-validation',
+            'data-yiggle--form-wizard-bundle--field-validation-url-value': path('fw_wizard_validate', { id: wizardId })
         }
     }) }}
 

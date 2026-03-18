@@ -1,4 +1,7 @@
-<div class="yw-inline">
+<div class="yw-inline"
+    data-controller="yiggle--form-wizard-bundle--field-validation"
+     data-yiggle--form-wizard-bundle--field-validation-url-value="{{ path('fw_wizard_validate', { id: wizardId }) }}"
+>
     {{ form_start(form) }}
     {% if stepCount > 1 %}
         {% include '@YiggleFormWizard/components/wizard/_header.html.twig' with {
