@@ -63,6 +63,7 @@ final class TelFieldTypeHandler extends AbstractWizardFieldTypeHandler
                 'placeholder' => (string) ($config['placeholder'] ?? ''),
                 'inputmode' => 'tel',
                 'autocomplete' => 'tel',
+                'pattern' => '^\+?[0-9 \-\(\)\.]{4,20}$',
             ],
             'help' => $config['help'] ?? null,
         ];

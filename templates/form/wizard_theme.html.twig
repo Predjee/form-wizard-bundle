@@ -51,17 +51,27 @@
             class: (label_attr.class|default('') ~ ' yw-label')|trim
         }) %}
 
-        {% if not compound %}
-            {% set label_attr = label_attr|merge({ for: id }) %}
-        {% endif %}
+        {% if compound and expanded is defined and expanded %}
+            <legend{% with {attr: label_attr} %}{{ block('attributes') }}{% endwith %}>
+                {{ label|trans(label_translation_parameters, translation_domain) }}
 
-        <label{% with {attr: label_attr} %}{{ block('attributes') }}{% endwith %}>
-            {{ label|trans(label_translation_parameters, translation_domain) }}
-
-            {% if required %}
-                <span class="yw-required" aria-hidden="true">*</span>
+                {% if required %}
+                    <span class="yw-required" aria-hidden="true">*</span>
+                {% endif %}
+            </legend>
+        {% else %}
+            {% if not compound %}
+                {% set label_attr = label_attr|merge({ for: id }) %}
             {% endif %}
-        </label>
+
+            <label{% with {attr: label_attr} %}{{ block('attributes') }}{% endwith %}>
+                {{ label|trans(label_translation_parameters, translation_domain) }}
+
+                {% if required %}
+                    <span class="yw-required" aria-hidden="true">*</span>
+                {% endif %}
+            </label>
+        {% endif %}
     {% endif %}
 {% endblock %}
 
@@ -94,6 +104,10 @@
         ?? 12
     %}
 
+    {% set rowLabel = 'yiggle_form_wizard.wizard.row_label'|trans|default('Add row') %}
+    {% set addLabel = config.addLabel|default('Add') %}
+    {% set removeLabel = config.removeLabel|default('Delete') %}
+
     <div class="yw-field yw-repeatable-field" style="--yw-col: {{ col }};">
         {% if form.vars.label %}
             <div class="yw-label">
@@ -104,47 +118,77 @@
         {{ form_help(form) }}
 
         <div class="yw-control">
-            <turbo-frame id="frame_{{ form.vars.id }}" class="yw-repeatable-group">
-                <div class="yw-repeatable-container">
+            <div
+                class="yw-repeatable-group"
+                data-controller="yw-repeatable"
+                data-yw-repeatable-row-label-value="{{ rowLabel }}"
+                data-yw-repeatable-remove-label-value="{{ removeLabel }}"
+                data-yw-repeatable-target-name-value="{{ form.vars.full_name }}"
+            >
+                <div class="yw-repeatable-container" data-yw-repeatable-target="container">
                     {% for child in form %}
-                        {% if child.vars.name matches '/^\\d+$/' %}
-                            <div class="yw-repeatable-row">
-                                <header class="yw-repeatable-row-head">
-                                    <div class="yw-repeatable-row-title">
-                                        {{ (config.addLabel|default('yiggle_form_wizard.wizard.row_label'))|trans }} {{ loop.index0 }}
-                                    </div>
-
-                                    <div class="yw-repeatable-row-actions">
-                                        {{ form_widget(child.remove_row, {
-                                            attr: {
-                                                'data-turbo-frame': 'frame_' ~ form.vars.id,
-                                                'formnovalidate': 'formnovalidate'
-                                            }
-                                        }) }}
-                                    </div>
-                                </header>
-
-                                <div class="yw-field-grid" role="group">
-                                    {% for field in child %}
-                                        {% if field.vars.name != 'remove_row' %}
-                                            {{ form_row(field) }}
-                                        {% endif %}
-                                    {% endfor %}
+                        <div class="yw-repeatable-row" data-yw-repeatable-target="row">
+                            <header class="yw-repeatable-row-head">
+                                <div class="yw-repeatable-row-title" data-yw-repeatable-target="title">
+                                    {{ rowLabel }} {{ loop.index }}
                                 </div>
+
+                                <div class="yw-repeatable-row-actions">
+                                    <button
+                                        type="button"
+                                        class="yw-btn yw-btn-link yw-btn-remove"
+                                        data-action="click->yw-repeatable#removeRow"
+                                    >
+                                        {{ removeLabel }}
+                                    </button>
+                                </div>
+                            </header>
+
+                            <div class="yw-field-grid" role="group">
+                                {% for field in child %}
+                                    {{ form_row(field) }}
+                                {% endfor %}
                             </div>
-                        {% endif %}
+                        </div>
                     {% endfor %}
                 </div>
 
+                <template data-yw-repeatable-target="prototype">
+                    <div class="yw-repeatable-row" data-yw-repeatable-target="row">
+                        <header class="yw-repeatable-row-head">
+                            <div class="yw-repeatable-row-title" data-yw-repeatable-target="title">
+                                {{ rowLabel }} __name__
+                            </div>
+
+                            <div class="yw-repeatable-row-actions">
+                                <button
+                                    type="button"
+                                    class="yw-btn yw-btn-link yw-btn-remove"
+                                    data-action="click->yw-repeatable#removeRow"
+                                >
+                                    {{ removeLabel }}
+                                </button>
+                            </div>
+                        </header>
+
+                        <div class="yw-field-grid" role="group">
+                            {% for field in form.vars.prototype %}
+                                {{ form_row(field) }}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </template>
+
                 <div class="yw-repeatable-actions">
-                    {{ form_widget(form.add_row, {
-                        attr: {
-                            'data-turbo-frame': 'frame_' ~ form.vars.id,
-                            'formnovalidate': 'formnovalidate'
-                        }
-                    }) }}
+                    <button
+                        type="button"
+                        class="yw-btn-add"
+                        data-action="click->yw-repeatable#addRow"
+                    >
+                        {{ addLabel }}
+                    </button>
                 </div>
-            </turbo-frame>
+            </div>
         </div>
 
         {{ form_errors(form) }}
@@ -153,25 +197,55 @@
 
 {% block choice_row %}
     {% set col = form.vars.row_attr['data-yw-width'] ?? form.vars.attr['data-yw-width'] ?? 12 %}
-    <div class="yw-field" style="--yw-col: {{ col }};">
-        {{ form_label(form) }}
-        <div class="yw-control">
-            {{ form_widget(form) }}
+
+    {% set describedby = [] %}
+    {% if form.vars.help %}
+        {% set describedby = describedby|merge([form.vars.id ~ '_help']) %}
+    {% endif %}
+    {% if form.vars.errors|length > 0 %}
+        {% for e in form.vars.errors %}
+            {% set describedby = describedby|merge([form.vars.id ~ '_error' ~ loop.index]) %}
+        {% endfor %}
+    {% endif %}
+
+    {% if expanded %}
+        <fieldset
+            class="yw-field"
+            style="--yw-col: {{ col }};"
+            {% if describedby|length > 0 %}aria-describedby="{{ describedby|join(' ') }}"{% endif %}
+            {% if required %}data-required-group="1"{% endif %}
+        >
+            {{ form_label(form) }}
+
+            <div class="yw-control">
+                {{ form_widget(form) }}
+            </div>
+
+            {{ form_errors(form) }}
+            {{ form_help(form) }}
+        </fieldset>
+    {% else %}
+        <div class="yw-field" style="--yw-col: {{ col }};">
+            {{ form_label(form) }}
+
+            <div class="yw-control">
+                {{ form_widget(form) }}
+            </div>
+
+            {{ form_errors(form) }}
+            {{ form_help(form) }}
         </div>
-        {{ form_errors(form) }}
-        {{ form_help(form) }}
-    </div>
+    {% endif %}
 {% endblock %}
 
 {% block choice_widget_expanded %}
-    <div {{ block('widget_container_attributes') }} class="yw-selection-cards-container">
+    {% set container_attr = attr|merge({
+        class: (attr.class|default('') ~ ' yw-selection-cards-container')|trim
+    }) %}
+
+    <div {% with { attr: container_attr } %}{{ block('attributes') }}{% endwith %}>
         {% for child in form %}
-            <label class="yw-selection-card">
-                {{ form_widget(child, { attr: { class: 'yw-selection-input' } }) }}
-                <span class="yw-selection-label">
-                    {{ child.vars.label|trans({}, choice_translation_domain) }}
-                </span>
-            </label>
+            {{ form_row(child) }}
         {% endfor %}
     </div>
 {% endblock %}

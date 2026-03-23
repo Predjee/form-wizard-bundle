@@ -101,12 +101,9 @@ final readonly class WizardRuntime
             );
         }
 
-        $isRowAction = $this->isRepeatableRowAction($request);
-        $status = $isRowAction
-            ? Response::HTTP_OK
-            : (($flow->getStepForm()->isSubmitted() && ! $flow->getStepForm()->isValid())
-                ? Response::HTTP_UNPROCESSABLE_ENTITY
-                : Response::HTTP_OK);
+        $status = ($flow->getStepForm()->isSubmitted() && ! $flow->getStepForm()->isValid())
+            ? Response::HTTP_UNPROCESSABLE_ENTITY
+            : Response::HTTP_OK;
 
         return WizardRuntimeResult::render(
             wizard: $wizard,
@@ -143,13 +140,5 @@ final readonly class WizardRuntime
         return $request->getSession()->get('fw_return_to_' . $id)
             ?? $this->returnUrlService->resolveReturnTo($request)
             ?? $request->getSchemeAndHttpHost() . $request->getPathInfo();
-    }
-
-    private function isRepeatableRowAction(Request $request): bool
-    {
-        $payload = $request->request->all('wizard_flow');
-        $json = \json_encode($payload) ?: '';
-
-        return \str_contains($json, '"add_row"') || \str_contains($json, '"remove_row"');
     }
 }

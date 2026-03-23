@@ -434,6 +434,31 @@
     background: var(--yw-danger-bg);
 }
 
+.yw-shell .yw-field.yw-field--invalid .yw-label {
+    color: var(--yw-danger);
+}
+
+.yw-shell .yw-field.yw-field--invalid .yw-input {
+    border-color: var(--yw-danger) !important;
+    box-shadow: 0 0 0 4px rgba(225, 29, 72, 0.08);
+}
+
+.yw-shell .yw-field.yw-field--invalid .yw-selection-card {
+    border-color: var(--yw-danger) !important;
+    background: var(--yw-danger-bg);
+}
+
+.yw-shell .yw-field.yw-field--valid .yw-input {
+    border-color: var(--yw-primary) !important;
+    box-shadow: 0 0 0 4px var(--yw-primary-soft);
+}
+
+.yw-shell .yw-field.yw-field--valid .yw-selection-card:has(.yw-selection-input:checked) {
+    border-color: var(--yw-primary) !important;
+    background: var(--yw-primary-soft);
+    box-shadow: 0 0 0 1px var(--yw-primary);
+}
+
 /* ==========================================================================
    Row action — onderdruk errors bij add/remove
    ========================================================================== */

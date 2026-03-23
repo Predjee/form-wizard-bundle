@@ -7,6 +7,7 @@ namespace Yiggle\FormWizardBundle\Tests\Unit;
 use PHPUnit\Framework\TestCase;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Yiggle\FormWizardBundle\Application\Export\SubmissionCsvExporter;
+use Yiggle\FormWizardBundle\Application\Service\FieldValueMapper;
 use Yiggle\FormWizardBundle\Application\Service\PriceCalculatorInterface;
 use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardFormInterface;
 use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardReceiptInterface;
@@ -16,12 +17,13 @@ final class SubmissionCsvExporterTest extends TestCase
 {
     public function testItBuildsHeadersAndRowsWithTranslationKeys(): void
     {
+        $fieldValueMapper = new FieldValueMapper();
         $translator = $this->createStub(TranslatorInterface::class);
         $priceCalculator = $this->createStub(PriceCalculatorInterface::class);
 
         $translator->method('trans')->willReturnCallback(fn ($id) => $id);
 
-        $exporter = new SubmissionCsvExporter($priceCalculator, $translator, 'yiggle_form_wizard');
+        $exporter = new SubmissionCsvExporter($priceCalculator, $fieldValueMapper, $translator, 'yiggle_form_wizard');
 
         $wizard = $this->createStub(WizardFormInterface::class);
         $submission = $this->createStub(WizardSubmissionInterface::class);

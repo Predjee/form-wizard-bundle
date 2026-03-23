@@ -5,20 +5,24 @@ declare(strict_types=1);
 namespace Yiggle\FormWizardBundle\Application\Export;
 
 use Symfony\Contracts\Translation\TranslatorInterface;
+use Yiggle\FormWizardBundle\Application\Service\FieldValueMapper;
 use Yiggle\FormWizardBundle\Application\Service\PriceCalculatorInterface;
 use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardFormInterface;
 use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardSubmissionInterface;
-use Yiggle\FormWizardBundle\Domain\Model\ReceiptLine;
+use Yiggle\FormWizardBundle\Domain\Model\ReceiptGroup;
 
 /**
  * @internal Utility service used for exporting submission data.
  */
 final readonly class SubmissionCsvExporter
 {
+    private const TRANSLATION_DOMAIN = 'yiggle_form_wizard';
+
     public function __construct(
         private PriceCalculatorInterface $priceCalculator,
+        private FieldValueMapper $fieldValueMapper,
         private TranslatorInterface $translator,
-        private string $translationDomain = 'yiggle_form_wizard'
+        private string $translationDomain = self::TRANSLATION_DOMAIN,
     ) {
     }
 
@@ -50,6 +54,7 @@ final readonly class SubmissionCsvExporter
                 }
             }
         }
+
         return $headers;
     }
 
@@ -60,7 +65,7 @@ final readonly class SubmissionCsvExporter
     {
         $data = $submission->getData();
         $receipt = $this->priceCalculator->getReceipt($wizard, $data);
-        /** @var array<string, array{items: array<string, list<ReceiptLine>>}> $grouped */
+        /** @var ReceiptGroup[] $grouped */
         $grouped = $receipt->getGroupedLines();
 
         $staticRow = [
@@ -79,64 +84,83 @@ final readonly class SubmissionCsvExporter
             foreach ($step->getStepFields() as $sf) {
                 $field = $sf->getField();
                 $name = $field->getName();
-                /** @var array{rowFields?: array<int, array{name: string, label?: string, options?: array<int, mixed>}>, options?: array<int, mixed>} $cfg */
+                /** @var array{rowFields?: array<int, array{name: string, label?: string, options?: array<int, mixed>}>, options?: array<int, mixed>, yesLabel?: string, noLabel?: string, receiptLabelYes?: string, receiptLabelNo?: string} $cfg */
                 $cfg = $field->getConfig();
                 $val = $stepData[$name] ?? null;
                 $lbl = $field->getLabel() ?: $name;
 
                 if ($field->getType() === 'wizard_repeatable_group' && is_array($val)) {
+                    $receiptGroup = null;
+                    foreach ($grouped as $group) {
+                        if ($group->key === $name) {
+                            $receiptGroup = $group;
+                            break;
+                        }
+                    }
+
                     foreach (array_values($val) as $idx => $entry) {
                         $itemTitle = '# ' . ($idx + 1);
                         $rowPrice = 0;
+
                         foreach ($cfg['rowFields'] ?? [] as $rf) {
                             $col = sprintf('%s - %s', $lbl, $rf['label'] ?? $rf['name']);
                             $options = is_array($rf['options'] ?? null) ? $rf['options'] : [];
-                            $nestedRows[$idx][$col] = $this->formatValue($entry[$rf['name']] ?? null, $options);
+                            $nestedRows[$idx][$col] = $this->translateValue(
+                                $this->fieldValueMapper->mapFromConfig(
+                                    $entry[$rf['name']] ?? null,
+                                    $rf,
+                                    $options,
+                                )
+                            );
                         }
-                        foreach ($grouped[$name]['items'][$itemTitle] ?? [] as $line) {
-                            $rowPrice += $line->amountCents;
+
+                        if ($receiptGroup !== null) {
+                            foreach ($receiptGroup->items as $item) {
+                                if ($item->title === $itemTitle) {
+                                    foreach ($item->lines as $line) {
+                                        $rowPrice += $line->amountCents;
+                                    }
+                                    break;
+                                }
+                            }
                         }
-                        $nestedRows[$idx][sprintf('%s - %s', $lbl, $this->trans('export.row_price'))] = number_format($rowPrice / 100, 2, ',', '.');
+
+                        $nestedRows[$idx][sprintf('%s - %s', $lbl, $this->trans('export.row_price'))] =
+                            number_format($rowPrice / 100, 2, ',', '.');
                     }
                 } else {
                     $options = is_array($cfg['options'] ?? null) ? $cfg['options'] : [];
-                    $staticRow[$lbl] = $this->formatValue($val, $options);
+                    $staticRow[$lbl] = $this->translateValue(
+                        $this->fieldValueMapper->mapFromConfig($val, $cfg, $options)
+                    );
                 }
             }
         }
 
-        return empty($nestedRows) ? [$staticRow] : array_map(fn ($r) => array_merge($staticRow, (array) $r), $nestedRows);
+        return empty($nestedRows)
+            ? [$staticRow]
+            : array_map(fn ($r) => array_merge($staticRow, (array) $r), $nestedRows);
     }
 
-    /**
-     * @param array<int, mixed> $opts
-     */
-    private function formatValue(mixed $val, array $opts = []): string
+    private function translateValue(mixed $value): string
     {
-        if ($val === null || $val === '') {
-            return '';
+        if (is_string($value) && str_starts_with($value, '__trans__:')) {
+            return $this->trans(substr($value, strlen('__trans__:')));
         }
 
-        if (is_bool($val)) {
-            return $val ? $this->trans('export.yes') : $this->trans('export.no');
+        if (is_array($value)) {
+            return implode(', ', array_map(fn ($v) => $this->translateValue($v), $value));
         }
 
-        if (is_array($val)) {
-            $formattedValues = array_map(fn ($item) => $this->formatValue($item, $opts), $val);
-            return implode(', ', $formattedValues);
-        }
-
-        foreach ($opts as $o) {
-            if (is_array($o) && (string) ($o['value'] ?? '') === (string) $val) {
-                return (string) ($o['label'] ?? $val);
-            }
-        }
-
-        return (string) $val;
+        return (string) $value;
     }
 
     private function trans(string $id): string
     {
-        return $this->translator->trans($this->translationDomain . '.' . $id, [], $this->translationDomain);
+        return $this->translator->trans(
+            $this->translationDomain . '.' . $id,
+            [],
+            $this->translationDomain
+        );
     }
 }

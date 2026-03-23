@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Yiggle\FormWizardBundle\Presentation\Web\Form\Type;
 
 use Symfony\Component\Form\AbstractType;
-use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormTypeInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -27,7 +26,6 @@ final class WizardRepeatableRowType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $rowFieldConfigs = $options['row_fields_config'];
-        $removeLabel = $options['remove_label'];
 
         foreach ($rowFieldConfigs as $fieldConfig) {
             $type = (string) ($fieldConfig['type'] ?? '');
@@ -59,19 +57,10 @@ final class WizardRepeatableRowType extends AbstractType
                 $opts['attr'] = $this->receiptTriggerDecider->withReceiptTriggerAttr($opts['attr']);
             }
 
-            /** @var class-string<FormTypeInterface<mixed>> $type */
-            $type = $handler->getSymfonyType();
-            $builder->add($name, $type, $opts);
+            /** @var class-string<FormTypeInterface<mixed>> $symfonyType */
+            $symfonyType = $handler->getSymfonyType();
+            $builder->add($name, $symfonyType, $opts);
         }
-
-        $builder->add('remove_row', SubmitType::class, [
-            'label' => $removeLabel,
-            'validation_groups' => false,
-            'attr' => [
-                'class' => 'yw-btn yw-btn-link yw-btn-remove',
-                'formnovalidate' => 'formnovalidate',
-            ],
-        ]);
     }
 
     #[\Override]
@@ -81,13 +70,11 @@ final class WizardRepeatableRowType extends AbstractType
 
         $resolver->setDefaults([
             'translation_domain' => 'yiggle_form_wizard',
-            'remove_label' => 'yiggle_form_wizard.wizard.remove_row',
             'data_class' => null,
             'required' => false,
             'compound' => true,
         ]);
 
         $resolver->setAllowedTypes('row_fields_config', 'array');
-        $resolver->setAllowedTypes('remove_label', 'string');
     }
 }
