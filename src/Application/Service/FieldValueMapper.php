@@ -72,8 +72,15 @@ final class FieldValueMapper
             return $value;
         }
 
+        foreach ($options as $option) {
+            if (is_array($option) && (string) ($option['value'] ?? '') === (string) $value) {
+                return (string) ($option['label'] ?? $value);
+            }
+        }
+
         if (is_bool($value) || $value === '1' || $value === '0' || $value === 1 || $value === 0) {
             $isTruthy = $value === true || $value === '1' || $value === 1;
+
             $yesLabel = $config['receiptLabelYes'] ?? $config['yesLabel'] ?? null;
             $noLabel = $config['receiptLabelNo'] ?? $config['noLabel'] ?? null;
 
@@ -87,12 +94,6 @@ final class FieldValueMapper
             return $isTruthy
                 ? self::TRANS_PREFIX . 'export.yes'
                 : self::TRANS_PREFIX . 'export.no';
-        }
-
-        foreach ($options as $option) {
-            if (is_array($option) && (string) ($option['value'] ?? '') === (string) $value) {
-                return (string) ($option['label'] ?? $value);
-            }
         }
 
         return $value;
