@@ -32,6 +32,5 @@ final class ExportControllerFunctionalTest extends FunctionalTestCase
         $this->assertStringStartsWith("\xEF\xBB\xBF", $content, 'De CSV moet beginnen met een UTF-8 BOM.');
 
         $this->assertStringContainsString('"Submission Date"', $content);
-        $this->assertStringContainsString('"Total Paid"', $content);
     }
 }

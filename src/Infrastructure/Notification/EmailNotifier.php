@@ -10,7 +10,7 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Address;
 use Symfony\Contracts\Translation\TranslatorInterface;
-use Yiggle\FormWizardBundle\Application\Service\FieldValueMapper;
+use Yiggle\FormWizardBundle\Application\Service\FieldValueMapperInterface;
 use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardFormInterface;
 use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardSubmissionInterface;
 use Yiggle\FormWizardBundle\Domain\Contract\WizardNotifierInterface;
@@ -22,7 +22,7 @@ final readonly class EmailNotifier implements WizardNotifierInterface
 
     public function __construct(
         private MailerInterface $mailer,
-        private FieldValueMapper $fieldValueMapper,
+        private FieldValueMapperInterface $fieldValueMapper,
         private TranslatorInterface $translator,
         #[Autowire(param: 'yiggle_form_wizard.notifiers.email.default_from_email')]
         private string $defaultFromEmail,

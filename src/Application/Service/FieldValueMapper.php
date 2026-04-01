@@ -6,7 +6,7 @@ namespace Yiggle\FormWizardBundle\Application\Service;
 
 use Yiggle\FormWizardBundle\Domain\Contract\Model\WizardFieldInterface;
 
-final class FieldValueMapper
+final class FieldValueMapper implements FieldValueMapperInterface
 {
     private const string TRANS_PREFIX = '__trans__:';
 
@@ -19,11 +19,6 @@ final class FieldValueMapper
         return $this->resolve($value, $config, $options, $rowFields);
     }
 
-    /**
-     * @param array<string, mixed> $config
-     * @param array<int, mixed> $options
-     * @param array<int, array<string, mixed>> $rowFields
-     */
     public function mapFromConfig(mixed $value, array $config, array $options = [], array $rowFields = []): mixed
     {
         return $this->resolve($value, $config, $options, $rowFields);
